@@ -47,6 +47,7 @@ public:
     Vector3 pos; // center of cube
     float s; // size
     Color color;
+    int neighbors = 0;
 
     Cell() {} // default
 
@@ -103,7 +104,7 @@ int main(void) {
     Cell cells[CELL_BOUNDS][CELL_BOUNDS];
     for (int x = 0; x < CELL_BOUNDS; x++) {
         for (int y = 0; y < CELL_BOUNDS; y++) {
-            cells[x][y].state = (double)rand()/(double)RAND_MAX < 0.5 ? State::ALIVE : State::DEAD;
+            cells[x][y].state = (double)rand()/(double)RAND_MAX < 0.2 ? State::ALIVE : State::DEAD;
             cells[x][y].hp = 5;
             cells[x][y].pos = (Vector3){
                 CELL_SIZE * (x - (CELL_BOUNDS - 1.0f) / 2.0f),
@@ -163,6 +164,28 @@ int main(void) {
             // DrawText("- Z to zoom to (0, 0, 0)", 40, 120, 10, DARKGRAY);
 
         EndDrawing();
+
+        for (int x = 0; x < CELL_BOUNDS; x++) {
+            for (int y = 0; y < CELL_BOUNDS; y++) {
+                cells[x][y].neighbors = 0;
+                int offsets[8][2] = {{1, 0}, {1, 1}, {1, -1}, {0, 1}, {0, -1}, {-1, 0}, {-1, 1}, {-1, -1}};
+                for (int i = 0; i < 8; i++) {
+                    if (x + offsets[i][0] >= 0 && x + offsets[i][0] < CELL_BOUNDS && y + offsets[i][1] >= 0 && y + offsets[i][1] < CELL_BOUNDS) {
+                        cells[x][y].neighbors += cells[x + offsets[i][0]][y + offsets[i][1]].state == State::ALIVE ? 1 : 0;
+                    }
+                }
+            }
+        }
+        for (int x = 0; x < CELL_BOUNDS; x++) {
+            for (int y = 0; y < CELL_BOUNDS; y++) {
+                if (cells[x][y].neighbors == 3) {
+                    cells[x][y].state = ALIVE;
+                }
+                else if (cells[x][y].neighbors < 2 || cells[x][y].neighbors > 3) {
+                    cells[x][y].state = DEAD;
+                }
+            }
+        }
     }
 
 
