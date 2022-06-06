@@ -56,6 +56,8 @@ public:
     }
     void randomizeState() {
         state = (double)rand() / (double)RAND_MAX < aliveChanceOnSpawn ? ALIVE : DEAD;
+        hp = STATE;
+        neighbors = 0;
     }
     void setPos(Vector3 pos) {
         this->pos = pos;
@@ -109,6 +111,7 @@ public:
             Color color = RED;
             if (this->state == DYING) {
                 unsigned char brightness = (int) ((float)this->hp/STATE * 255.0f);
+                // unsigned char brightness = (int) ((26.0f - (float)neighbors)/26 * 255.0f);
                 color = (Color){ brightness, brightness, brightness, 255 };
             }
             DrawCube(this->pos, CELL_SIZE, CELL_SIZE, CELL_SIZE, color);
@@ -189,7 +192,7 @@ int main(void) {
     const int screenHeight = 450;
 
     InitWindow(screenWidth, screenHeight, "3D Cellular Automata");
-    SetTargetFPS(3);
+    // SetTargetFPS(3);
 
     Camera3D camera = { 0 };
     camera.position = (Vector3){ 10.0f, 10.0f, 10.0f }; // Camera position
@@ -201,8 +204,11 @@ int main(void) {
     float cameraLat = 20.0f;
     float cameraLon = 20.0f;
     float cameraRadius = 40.0f;
-    float cameraMoveSpeed = 1.0f * 20.0f;
-    float cameraZoomSpeed = 0.25f * 20.0f;
+    float cameraMoveSpeed = 180.0f/4.0f;
+    float cameraZoomSpeed = 10.0f;
+
+    int updateSpeed = 3;
+    float frame = 0;
 
 
     Cell cells[CELL_BOUNDS][CELL_BOUNDS][CELL_BOUNDS]; // calls default consturctor
@@ -221,12 +227,15 @@ int main(void) {
     // Main game loop
     while (!WindowShouldClose()) {
 
-        if (IsKeyDown('W')) cameraLat += cameraMoveSpeed;
-        else if (IsKeyDown('S')) cameraLat -= cameraMoveSpeed;
-        if (IsKeyDown('A')) cameraLon -= cameraMoveSpeed;
-        else if (IsKeyDown('D')) cameraLon += cameraMoveSpeed;
-        if (IsKeyDown('Q')) cameraRadius -= cameraZoomSpeed;
-        else if (IsKeyDown('E')) cameraRadius += cameraZoomSpeed;
+        float delta = GetFrameTime();
+        frame += delta;
+
+        if (IsKeyDown('W')) cameraLat += cameraMoveSpeed * delta;
+        else if (IsKeyDown('S')) cameraLat -= cameraMoveSpeed * delta;
+        if (IsKeyDown('A')) cameraLon -= cameraMoveSpeed * delta;
+        else if (IsKeyDown('D')) cameraLon += cameraMoveSpeed * delta;
+        if (IsKeyDown('Q')) cameraRadius -= cameraZoomSpeed * delta;
+        else if (IsKeyDown('E')) cameraRadius += cameraZoomSpeed * delta;
 
         if (IsKeyDown('R')) randomizeCells(cells);
 
@@ -240,6 +249,11 @@ int main(void) {
             cameraRadius * cos(degreesToRadians(cameraLat)) * sin(degreesToRadians(cameraLon)),
             cameraRadius * sin(degreesToRadians(cameraLat))
         };
+
+        if (frame >= 1.0f/updateSpeed) {
+            updateCells(cells);
+            while (frame >= 1.0/updateSpeed) frame -= 1.0/updateSpeed;
+        }
 
         BeginDrawing();
 
@@ -260,8 +274,6 @@ int main(void) {
             // DrawText("- Z to zoom to (0, 0, 0)", 40, 120, 10, DARKGRAY);
 
         EndDrawing();
-
-        updateCells(cells);
     }
 
     CloseWindow();        // Close window and OpenGL context
