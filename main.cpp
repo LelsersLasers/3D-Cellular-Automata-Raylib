@@ -1,6 +1,9 @@
 #include "raylib.h"
 #include <math.h>
 
+#include <iostream>
+using namespace std;
+
 #define PI 3.14159265358979323846
 
 
@@ -45,6 +48,9 @@ int main(void)
         else if (IsKeyDown('D')) cameraLon += cameraMoveSpeed;
         if (IsKeyDown('Q')) cameraRadius -= cameraZoomSpeed;
         else if (IsKeyDown('E')) cameraRadius += cameraZoomSpeed;
+
+        if (cameraLat > 90) cameraLat = 90;
+        else if (cameraLat < -90) cameraLat = -90;
 
         camera.position = (Vector3){
             cameraRadius * cos(degreesToRadians(cameraLat)) * cos(degreesToRadians(cameraLon)),
