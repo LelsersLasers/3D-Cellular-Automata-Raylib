@@ -37,12 +37,27 @@ int STATE = 5;
 NeighborType NEIGHBOR = MOORE;
 
 
-
 enum State {
     ALIVE,
     DEAD,
     DYING
 };
+
+
+class ToggleKey {
+private:
+    bool wasDown = false;
+public:
+    bool down(bool pressState) {
+        if (!wasDown && pressState) {
+            wasDown = true;
+            return true;
+        }
+        else if (!pressState) wasDown = false;
+        return false;
+    } 
+};
+
 
 class Cell {
 private:
@@ -51,25 +66,15 @@ private:
     int hp = STATE;
     int neighbors = 0;
 public:
-    Cell() {
-        randomizeState();
-    }
+    Cell() { randomizeState(); }
+    void setPos(Vector3 pos) { this->pos = pos; }
+    void clearNeighbors() { neighbors = 0; }
+    void addNeighbor(State neighborState) { neighbors += neighborState == ALIVE ? 1 : 0; }
+    State getState() { return state; }
     void randomizeState() {
         state = (double)rand() / (double)RAND_MAX < aliveChanceOnSpawn ? ALIVE : DEAD;
         hp = STATE;
         neighbors = 0;
-    }
-    void setPos(Vector3 pos) {
-        this->pos = pos;
-    }
-    void clearNeighbors() {
-        neighbors = 0;
-    }
-    void addNeighbor(State neighborState) {
-        neighbors += neighborState == ALIVE ? 1 : 0;
-    }
-    State getState() {
-        return state;
     }
     void sync() {
         switch (state) {
@@ -81,9 +86,7 @@ public:
                         break;
                     }
                 }
-                if (willDie) {
-                    state = DYING;
-                }
+                if (willDie) state = DYING;
                 break;
             }
             case DEAD: {
@@ -98,9 +101,7 @@ public:
             }
             case DYING: {
                 hp--;
-                if (hp == 0) {
-                    state = DEAD;
-                }
+                if (hp == 0) state = DEAD;
                 break;
             }
         }
@@ -206,6 +207,13 @@ int main(void) {
     float cameraMoveSpeed = 180.0f/4.0f;
     float cameraZoomSpeed = 10.0f;
 
+    bool paused = false;
+
+    ToggleKey mouseTK;
+    ToggleKey spaceTK;
+    ToggleKey upTK;
+    ToggleKey downTK;
+
     int updateSpeed = 8;
     float frame = 0;
 
@@ -238,6 +246,8 @@ int main(void) {
 
         if (IsKeyDown('R')) randomizeCells(cells);
 
+        if (mouseTK.down(IsMouseButtonPressed(MOUSE_LEFT_BUTTON))) paused = !paused;
+
         if (cameraLat > 90) cameraLat = 89.99f;
         else if (cameraLat < -90) cameraLat = -89.99f;
 
@@ -249,7 +259,7 @@ int main(void) {
             cameraRadius * sin(degreesToRadians(cameraLat))
         };
 
-        if (frame >= 1.0f/updateSpeed) {
+        if (!paused && frame >= 1.0f/updateSpeed) {
             updateCells(cells);
             while (frame >= 1.0/updateSpeed) frame -= 1.0/updateSpeed;
         }
