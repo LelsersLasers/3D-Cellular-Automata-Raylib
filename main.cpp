@@ -9,10 +9,11 @@
 
 #define CELL_SIZE 1.0f
 #define CELL_BOUNDS 20
+#define aliveChanceOnSpawn 0.2
 
 
 /*
-Rules:
+Rules/explaination:
 - Survival:
     - If a cell is alive, it will remain alive if it has A neighbors
 - Spawn:
@@ -23,21 +24,17 @@ Rules:
 - Neighbor:
     - [M]oore: counts diagonal neighbors (3^3 - 1 = 26 possible neighbors)
     - [V]on [N]euman: only counts neighors where the faces touch
-
 */
 
-
-
-enum NeightborType {
+enum NeighborType {
     MOORE,
     VON_NEUMAN
 };
 
-
 int SURVIVAL[] = { 4 };
 int SPAWN[] = { 4 };
 int STATE = 5;
-NeightborType NEIGHBOR = MOORE;
+NeighborType NEIGHBOR = MOORE;
 
 
 
@@ -47,42 +44,78 @@ enum State {
     DYING
 };
 
-
 class Cell {
-// private:
-    
-
-public:
-
+private:
     State state;
-    int hp;
     Vector3 pos; // center of cube
-    float s; // size
+    int hp = STATE;
     int neighbors = 0;
-
-    Cell() {} // default
-
-    Cell(State state, int hp, Vector3 pos, float s) {
-        this->state = state;
-        this->hp = hp;
+public:
+    Cell() {
+        state = (double)rand() / (double)RAND_MAX < aliveChanceOnSpawn ? ALIVE : DEAD;
+        pos = (Vector3){ 0.0f, 0.0f, 0.0f };
+    }
+    void setPos(Vector3 pos) {
         this->pos = pos;
-        this->s = s;
+    }
+    void clearNeighbors() {
+        neighbors = 0;
+    }
+    void addNeighbor(State neighborState) {
+        neighbors += neighborState == ALIVE ? 1 : 0;
+    }
+    State getState() {
+        return state;
+    }
+    void sync() {
+        switch (state) {
+            case ALIVE: {
+                bool willDie = true;
+                for (int value : SURVIVAL) {
+                    if (neighbors == value) {
+                        willDie = false;
+                        break;
+                    }
+                }
+                if (willDie) {
+                    state = DYING;
+                }
+                break;
+            }
+            case DEAD: {
+                for (int value : SPAWN) {
+                    if (neighbors == value) {
+                        state = ALIVE;
+                        hp = STATE;
+                        break;
+                    }
+                }
+                break;
+            }
+            case DYING: {
+                hp--;
+                if (hp == 0) {
+                    state = DEAD;
+                }
+                break;
+            }
+        }
     }
 
     void draw() {
         if (this->state != DEAD) {
             Color color = RED;
             if (this->state == DYING) {
-                int brightness = (int) ((float)this->hp/STATE * 255.0f);
+                unsigned char brightness = (int) ((float)this->hp/STATE * 255.0f);
                 color = (Color){ brightness, brightness, brightness, 255 };
             }
-            DrawCube(this->pos, this->s, this->s, this->s, color);
+            DrawCube(this->pos, CELL_SIZE, CELL_SIZE, CELL_SIZE, color);
         }
     }
     void draw(Color color) {
         this->draw();
         if (this->state != DEAD) {
-            DrawCubeWires(this->pos, this->s, this->s, this->s, color);
+            DrawCubeWires(this->pos, CELL_SIZE, CELL_SIZE, CELL_SIZE, color);
         }
     }
 
@@ -113,7 +146,7 @@ int main(void) {
 
     float cameraLat = 20.0f;
     float cameraLon = 20.0f;
-    float cameraRadius = 30.0f;
+    float cameraRadius = 40.0f;
     float cameraMoveSpeed = 1.0f * 20.0f;
     float cameraZoomSpeed = 0.25f * 20.0f;
 
@@ -122,14 +155,11 @@ int main(void) {
     for (int x = 0; x < CELL_BOUNDS; x++) {
         for (int y = 0; y < CELL_BOUNDS; y++) {
             for (int z = 0; z < CELL_BOUNDS; z++) {
-                cells[x][y][z].state = (double)rand()/(double)RAND_MAX < 0.2 ? State::ALIVE : State::DEAD;
-                cells[x][y][z].hp = STATE;
-                cells[x][y][z].pos = (Vector3){
+                cells[x][y][z].setPos((Vector3){
                     CELL_SIZE * (x - (CELL_BOUNDS - 1.0f) / 2.0f),
                     CELL_SIZE * (y - (CELL_BOUNDS - 1.0f) / 2.0f),
                     CELL_SIZE * (z - (CELL_BOUNDS - 1.0f) / 2.0f)
-                };
-                cells[x][y][z].s = CELL_SIZE;
+                });
             }
         }
     }
@@ -189,16 +219,15 @@ int main(void) {
         for (int x = 0; x < CELL_BOUNDS; x++) {
             for (int y = 0; y < CELL_BOUNDS; y++) {
                 for (int z = 0; z < CELL_BOUNDS; z++) {
-                    cells[x][y][z].neighbors = 0;
+                    cells[x][y][z].clearNeighbors();
                     for (int i = 0; i < 3; i++) {
                         for (int j = 0; j < 3; j++) {
                             for (int k = 0; k < 3; k++) {
-                                bool sameCell = i == 0 && j == 0 && k == 0;
-                                if (!sameCell &&
+                                if (!(i == 0 && j == 0 && k == 0) &&
                                     x + offset_options[i] >= 0 && x + offset_options[i] < CELL_BOUNDS &&
                                     y + offset_options[j] >= 0 && y + offset_options[j] < CELL_BOUNDS &&
                                     z + offset_options[k] >= 0 && z + offset_options[k] < CELL_BOUNDS) {
-                                    cells[x][y][z].neighbors += cells[x + offset_options[i]][y + offset_options[j]][z + offset_options[k]].state == State::ALIVE ? 1 : 0;
+                                    cells[x][y][z].addNeighbor(cells[x + offset_options[i]][y + offset_options[j]][z + offset_options[k]].getState());
                                 }
                             }
                         }
@@ -209,38 +238,7 @@ int main(void) {
         for (int x = 0; x < CELL_BOUNDS; x++) {
             for (int y = 0; y < CELL_BOUNDS; y++) {
                 for (int z = 0; z < CELL_BOUNDS; z++) {
-                    switch (cells[x][y][z].state) {
-                        case ALIVE: {
-                            bool willDie = true;
-                            for (int value : SURVIVAL) {
-                                if (cells[x][y][z].neighbors == value) {
-                                    willDie = false;
-                                    break;
-                                }
-                            }
-                            if (willDie) {
-                                cells[x][y][z].state = DYING;
-                            }
-                            break;
-                        }
-                        case DEAD: {
-                            for (int value : SPAWN) {
-                                if (cells[x][y][z].neighbors == value) {
-                                    cells[x][y][z].state = ALIVE;
-                                    cells[x][y][z].hp = STATE;
-                                    break;
-                                }
-                            }
-                            break;
-                        }
-                        case DYING: {
-                            cells[x][y][z].hp--;
-                            if (cells[x][y][z].hp == 0) {
-                                cells[x][y][z].state = DEAD;
-                            }
-                            break;
-                        }
-                    }
+                    cells[x][y][z].sync();
                 }
             }
         }
