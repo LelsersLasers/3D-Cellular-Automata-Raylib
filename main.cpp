@@ -211,8 +211,8 @@ int main(void) {
 
     ToggleKey mouseTK;
     ToggleKey spaceTK;
-    ToggleKey upTK;
-    ToggleKey downTK;
+    ToggleKey xTK;
+    ToggleKey zTK;
 
     int updateSpeed = 8;
     float frame = 0;
@@ -237,16 +237,20 @@ int main(void) {
         float delta = GetFrameTime();
         frame += delta;
 
-        if (IsKeyDown('W')) cameraLat += cameraMoveSpeed * delta;
-        else if (IsKeyDown('S')) cameraLat -= cameraMoveSpeed * delta;
-        if (IsKeyDown('A')) cameraLon -= cameraMoveSpeed * delta;
-        else if (IsKeyDown('D')) cameraLon += cameraMoveSpeed * delta;
+        if (IsKeyDown('W') || IsKeyDown(KEY_UP)) cameraLat += cameraMoveSpeed * delta;
+        else if (IsKeyDown('S') || IsKeyDown(KEY_DOWN)) cameraLat -= cameraMoveSpeed * delta;
+        if (IsKeyDown('A') || IsKeyDown(KEY_LEFT)) cameraLon -= cameraMoveSpeed * delta;
+        else if (IsKeyDown('D')|| IsKeyDown(KEY_RIGHT)) cameraLon += cameraMoveSpeed * delta;
         if (IsKeyDown('Q')) cameraRadius -= cameraZoomSpeed * delta;
         else if (IsKeyDown('E')) cameraRadius += cameraZoomSpeed * delta;
 
         if (IsKeyDown('R')) randomizeCells(cells);
 
         if (mouseTK.down(IsMouseButtonPressed(MOUSE_LEFT_BUTTON))) paused = !paused;
+        if (xTK.down(IsKeyDown('X'))) updateSpeed++;
+        if (zTK.down(IsKeyDown('Z'))) {
+            if (updateSpeed > 1) updateSpeed--;
+        };
 
         if (cameraLat > 90) cameraLat = 89.99f;
         else if (cameraLat < -90) cameraLat = -89.99f;
@@ -282,6 +286,7 @@ int main(void) {
             DrawText("- R to re-randomize the cells", 40, 100, 10, DARKGRAY);
             std::string fpsText = "- FPS: " + std::to_string(GetFPS());
             DrawText(fpsText.c_str(), 40, 120, 10, DARKGRAY);
+            // draw text: info - fps, dist, camera coords, update speed, bounds, rules, etc
 
         EndDrawing();
     }
