@@ -2,13 +2,13 @@
 #include <math.h>
 #include <time.h>
 
-// #include <iostream>
+#include <iostream>
 // using namespace std;
 
 #define PI 3.14159265358979323846
 
 #define CELL_SIZE 1.0f
-#define CELL_BOUNDS 20
+#define CELL_BOUNDS 30
 #define aliveChanceOnSpawn 0.2
 
 
@@ -192,7 +192,6 @@ int main(void) {
     const int screenHeight = 450;
 
     InitWindow(screenWidth, screenHeight, "3D Cellular Automata");
-    // SetTargetFPS(3);
 
     Camera3D camera = { 0 };
     camera.position = (Vector3){ 10.0f, 10.0f, 10.0f }; // Camera position
@@ -203,11 +202,11 @@ int main(void) {
 
     float cameraLat = 20.0f;
     float cameraLon = 20.0f;
-    float cameraRadius = 40.0f;
+    float cameraRadius = 2.0f * CELL_SIZE * CELL_BOUNDS;
     float cameraMoveSpeed = 180.0f/4.0f;
     float cameraZoomSpeed = 10.0f;
 
-    int updateSpeed = 3;
+    int updateSpeed = 8;
     float frame = 0;
 
 
@@ -266,12 +265,13 @@ int main(void) {
             DrawRectangle( 10, 10, 320, 133, Fade(SKYBLUE, 0.5f));
             DrawRectangleLines( 10, 10, 320, 133, BLUE);
 
-            DrawText("Camera controls:", 20, 20, 10, BLACK);
+            DrawText("Controls:", 20, 20, 10, BLACK);
             DrawText("- Q to zoom in, E to zoom out", 40, 40, 10, DARKGRAY);
             DrawText("- W to rotate camera up, S to rotate down", 40, 60, 10, DARKGRAY);
             DrawText("- A to rotate left, D to rotate right", 40, 80, 10, DARKGRAY);
-            // DrawText("- Alt + Ctrl + Mouse Wheel Pressed for Smooth Zoom", 40, 100, 10, DARKGRAY);
-            // DrawText("- Z to zoom to (0, 0, 0)", 40, 120, 10, DARKGRAY);
+            DrawText("- R to re-randomize the cells", 40, 100, 10, DARKGRAY);
+            std::string fpsText = "- FPS: " + std::to_string(GetFPS());
+            DrawText(fpsText.c_str(), 40, 120, 10, DARKGRAY);
 
         EndDrawing();
     }
