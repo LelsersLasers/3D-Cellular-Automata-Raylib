@@ -100,13 +100,19 @@ int main(void) {
     float cameraZoomSpeed = 0.25f;
 
 
-    Cell cells[CELL_BOUNDS];
-    for (int i = 0; i < CELL_BOUNDS; i++) {
-        cells[i].state = (double)rand()/(double)RAND_MAX < 0.5 ? State::ALIVE : State::DEAD;
-        cells[i].hp = 5;
-        cells[i].pos = (Vector3){ CELL_SIZE * (i - (CELL_BOUNDS - 1.0f) / 2.0f), 0.0f, 0.0f };
-        cells[i].s = CELL_SIZE;
-        cells[i].color = (Color){ 255, 0, 0, 255 };
+    Cell cells[CELL_BOUNDS][CELL_BOUNDS];
+    for (int x = 0; x < CELL_BOUNDS; x++) {
+        for (int y = 0; y < CELL_BOUNDS; y++) {
+            cells[x][y].state = (double)rand()/(double)RAND_MAX < 0.5 ? State::ALIVE : State::DEAD;
+            cells[x][y].hp = 5;
+            cells[x][y].pos = (Vector3){
+                CELL_SIZE * (x - (CELL_BOUNDS - 1.0f) / 2.0f),
+                CELL_SIZE * (y - (CELL_BOUNDS - 1.0f) / 2.0f),
+                0.0f
+            };
+            cells[x][y].s = CELL_SIZE;
+            cells[x][y].color = (Color){ 255, 0, 0, 255 };
+        }
     }
 
     // Main game loop
@@ -136,8 +142,10 @@ int main(void) {
 
             BeginMode3D(camera);
 
-                for (Cell c : cells) {
-                    c.draw(GREEN);
+                for (int x = 0; x < CELL_BOUNDS; x++) {
+                    for (int y = 0; y < CELL_BOUNDS; y++) {
+                        cells[x][y].draw(GREEN);
+                    }
                 }
 
                 DrawCubeWires((Vector3){ 0.0f, 0.0f, 0.0f }, 2.0f, 2.0f, 2.0f, BLUE);
