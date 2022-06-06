@@ -24,9 +24,22 @@ Rules:
     - [M]oore: counts diagonal neighbors (3^3 - 1 = 26 possible neighbors)
     - [V]on [N]euman: only counts neighors where the faces touch
 
-
-
 */
+
+
+
+enum NeightborType {
+    MOORE,
+    VON_NEUMAN
+};
+
+
+int SURVIVAL[] = { 6, 7, 8 };
+int SPAWN[] = { 6, 7, 8 };
+int STATE[] = { 3 };
+NeightborType NEIGHBOR = MOORE;
+
+
 
 enum State {
     ALIVE,
@@ -38,7 +51,6 @@ enum State {
 class Cell {
 // private:
     
-
 
 public:
 
@@ -65,8 +77,10 @@ public:
         }
     }
     void draw(Color color) {
-        this->draw();
-        DrawCubeWires(this->pos, this->s, this->s, this->s, color);
+        if (this->state != DEAD) {
+            DrawCube(this->pos, this->s, this->s, this->s, this->color);
+            DrawCubeWires(this->pos, this->s, this->s, this->s, color);
+        }
     }
 
 };
@@ -101,18 +115,20 @@ int main(void) {
     float cameraZoomSpeed = 0.25f;
 
 
-    Cell cells[CELL_BOUNDS][CELL_BOUNDS];
+    Cell cells[CELL_BOUNDS][CELL_BOUNDS][CELL_BOUNDS];
     for (int x = 0; x < CELL_BOUNDS; x++) {
         for (int y = 0; y < CELL_BOUNDS; y++) {
-            cells[x][y].state = (double)rand()/(double)RAND_MAX < 0.2 ? State::ALIVE : State::DEAD;
-            cells[x][y].hp = 5;
-            cells[x][y].pos = (Vector3){
-                CELL_SIZE * (x - (CELL_BOUNDS - 1.0f) / 2.0f),
-                CELL_SIZE * (y - (CELL_BOUNDS - 1.0f) / 2.0f),
-                0.0f
-            };
-            cells[x][y].s = CELL_SIZE;
-            cells[x][y].color = (Color){ 255, 0, 0, 255 };
+            for (int z = 0; z < CELL_BOUNDS; z++) {
+                cells[x][y][z].state = (double)rand()/(double)RAND_MAX < 0.2 ? State::ALIVE : State::DEAD;
+                cells[x][y][z].hp = 5;
+                cells[x][y][z].pos = (Vector3){
+                    CELL_SIZE * (x - (CELL_BOUNDS - 1.0f) / 2.0f),
+                    CELL_SIZE * (y - (CELL_BOUNDS - 1.0f) / 2.0f),
+                    CELL_SIZE * (z - (CELL_BOUNDS - 1.0f) / 2.0f)
+                };
+                cells[x][y][z].s = CELL_SIZE;
+                cells[x][y][z].color = (Color){ 255, 0, 0, 255 };
+            }
         }
     }
 
@@ -145,7 +161,9 @@ int main(void) {
 
                 for (int x = 0; x < CELL_BOUNDS; x++) {
                     for (int y = 0; y < CELL_BOUNDS; y++) {
-                        cells[x][y].draw(GREEN);
+                        for (int z = 0; z < CELL_BOUNDS; z++) {
+                            cells[x][y][z].draw(GREEN);
+                        }
                     }
                 }
 
@@ -165,29 +183,28 @@ int main(void) {
 
         EndDrawing();
 
-        for (int x = 0; x < CELL_BOUNDS; x++) {
-            for (int y = 0; y < CELL_BOUNDS; y++) {
-                cells[x][y].neighbors = 0;
-                int offsets[8][2] = {{1, 0}, {1, 1}, {1, -1}, {0, 1}, {0, -1}, {-1, 0}, {-1, 1}, {-1, -1}};
-                for (int i = 0; i < 8; i++) {
-                    if (x + offsets[i][0] >= 0 && x + offsets[i][0] < CELL_BOUNDS && y + offsets[i][1] >= 0 && y + offsets[i][1] < CELL_BOUNDS) {
-                        cells[x][y].neighbors += cells[x + offsets[i][0]][y + offsets[i][1]].state == State::ALIVE ? 1 : 0;
-                    }
-                }
-            }
-        }
-        for (int x = 0; x < CELL_BOUNDS; x++) {
-            for (int y = 0; y < CELL_BOUNDS; y++) {
-                if (cells[x][y].neighbors == 3) {
-                    cells[x][y].state = ALIVE;
-                }
-                else if (cells[x][y].neighbors < 2 || cells[x][y].neighbors > 3) {
-                    cells[x][y].state = DEAD;
-                }
-            }
-        }
+        // for (int x = 0; x < CELL_BOUNDS; x++) {
+        //     for (int y = 0; y < CELL_BOUNDS; y++) {
+        //         cells[x][y].neighbors = 0;
+        //         int offsets[8][2] = {{1, 0}, {1, 1}, {1, -1}, {0, 1}, {0, -1}, {-1, 0}, {-1, 1}, {-1, -1}};
+        //         for (int i = 0; i < 8; i++) {
+        //             if (x + offsets[i][0] >= 0 && x + offsets[i][0] < CELL_BOUNDS && y + offsets[i][1] >= 0 && y + offsets[i][1] < CELL_BOUNDS) {
+        //                 cells[x][y].neighbors += cells[x + offsets[i][0]][y + offsets[i][1]].state == State::ALIVE ? 1 : 0;
+        //             }
+        //         }
+        //     }
+        // }
+        // for (int x = 0; x < CELL_BOUNDS; x++) {
+        //     for (int y = 0; y < CELL_BOUNDS; y++) {
+        //         if (cells[x][y].neighbors == 3) {
+        //             cells[x][y].state = ALIVE;
+        //         }
+        //         else if (cells[x][y].neighbors < 2 || cells[x][y].neighbors > 3) {
+        //             cells[x][y].state = DEAD;
+        //         }
+        //     }
+        // }
     }
-
 
     CloseWindow();        // Close window and OpenGL context
     return 0;
