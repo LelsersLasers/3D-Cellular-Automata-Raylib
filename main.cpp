@@ -104,7 +104,7 @@ int main(void) {
     for (int i = 0; i < CELL_BOUNDS; i++) {
         cells[i].state = (double)rand()/(double)RAND_MAX < 0.5 ? State::ALIVE : State::DEAD;
         cells[i].hp = 5;
-        cells[i].pos = (Vector3){ CELL_SIZE * i, 0.0f, 0.0f };
+        cells[i].pos = (Vector3){ CELL_SIZE * (i - (CELL_BOUNDS - 1.0f) / 2.0f), 0.0f, 0.0f };
         cells[i].s = CELL_SIZE;
         cells[i].color = (Color){ 255, 0, 0, 255 };
     }
@@ -119,8 +119,8 @@ int main(void) {
         if (IsKeyDown('Q')) cameraRadius -= cameraZoomSpeed;
         else if (IsKeyDown('E')) cameraRadius += cameraZoomSpeed;
 
-        if (cameraLat > 90) cameraLat = 90;
-        else if (cameraLat < -90) cameraLat = -90;
+        if (cameraLat > 90) cameraLat = 89.99f;
+        else if (cameraLat < -90) cameraLat = -89.99f;
 
         if (cameraRadius < 1) cameraRadius = 1;
 
@@ -139,6 +139,8 @@ int main(void) {
                 for (Cell c : cells) {
                     c.draw(GREEN);
                 }
+
+                DrawCubeWires((Vector3){ 0.0f, 0.0f, 0.0f }, 2.0f, 2.0f, 2.0f, BLUE);
 
             EndMode3D();
 
