@@ -47,13 +47,15 @@ enum State {
 class Cell {
 private:
     State state;
-    Vector3 pos; // center of cube
+    Vector3 pos = { 0.0f, 0.0f, 0.0f }; // center of cube, make sure to call setPos() before using
     int hp = STATE;
     int neighbors = 0;
 public:
     Cell() {
+        randomizeState();
+    }
+    void randomizeState() {
         state = (double)rand() / (double)RAND_MAX < aliveChanceOnSpawn ? ALIVE : DEAD;
-        pos = (Vector3){ 0.0f, 0.0f, 0.0f };
     }
     void setPos(Vector3 pos) {
         this->pos = pos;
@@ -126,6 +128,58 @@ float degreesToRadians(float degrees) {
     return degrees * PI / 180.0f;
 }
 
+void drawCells(Cell cells[CELL_BOUNDS][CELL_BOUNDS][CELL_BOUNDS]) {
+    for (int x = 0; x < CELL_BOUNDS; x++) {
+        for (int y = 0; y < CELL_BOUNDS; y++) {
+            for (int z = 0; z < CELL_BOUNDS; z++) {
+                cells[x][y][z].draw(GREEN);
+            }
+        }
+    }
+    int outlineSize = CELL_SIZE * CELL_BOUNDS;
+    DrawCubeWires((Vector3){ 0, 0, 0 }, outlineSize, outlineSize, outlineSize, BLUE);
+}
+
+void updateCells(Cell cells[CELL_BOUNDS][CELL_BOUNDS][CELL_BOUNDS]) {
+    for (int x = 0; x < CELL_BOUNDS; x++) {
+        for (int y = 0; y < CELL_BOUNDS; y++) {
+            for (int z = 0; z < CELL_BOUNDS; z++) {
+                cells[x][y][z].clearNeighbors();
+                int offset_options[] = { -1, 0, 1 };
+                for (int i = 0; i < 3; i++) {
+                    for (int j = 0; j < 3; j++) {
+                        for (int k = 0; k < 3; k++) {
+                            if (!(i == 0 && j == 0 && k == 0) &&
+                                x + offset_options[i] >= 0 && x + offset_options[i] < CELL_BOUNDS &&
+                                y + offset_options[j] >= 0 && y + offset_options[j] < CELL_BOUNDS &&
+                                z + offset_options[k] >= 0 && z + offset_options[k] < CELL_BOUNDS) {
+                                cells[x][y][z].addNeighbor(cells[x + offset_options[i]][y + offset_options[j]][z + offset_options[k]].getState());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    for (int x = 0; x < CELL_BOUNDS; x++) {
+        for (int y = 0; y < CELL_BOUNDS; y++) {
+            for (int z = 0; z < CELL_BOUNDS; z++) {
+                cells[x][y][z].sync();
+            }
+        }
+    }
+}
+
+void randomizeCells(Cell cells[CELL_BOUNDS][CELL_BOUNDS][CELL_BOUNDS]) {
+    for (int x = 0; x < CELL_BOUNDS; x++) {
+        for (int y = 0; y < CELL_BOUNDS; y++) {
+            for (int z = 0; z < CELL_BOUNDS; z++) {
+                cells[x][y][z].randomizeState();
+            }
+        }
+    }
+}
+
 
 int main(void) {
 
@@ -151,7 +205,7 @@ int main(void) {
     float cameraZoomSpeed = 0.25f * 20.0f;
 
 
-    Cell cells[CELL_BOUNDS][CELL_BOUNDS][CELL_BOUNDS];
+    Cell cells[CELL_BOUNDS][CELL_BOUNDS][CELL_BOUNDS]; // calls default consturctor
     for (int x = 0; x < CELL_BOUNDS; x++) {
         for (int y = 0; y < CELL_BOUNDS; y++) {
             for (int z = 0; z < CELL_BOUNDS; z++) {
@@ -165,14 +219,16 @@ int main(void) {
     }
 
     // Main game loop
-    while (!WindowShouldClose())        // Detect window close button or ESC key
-    {
+    while (!WindowShouldClose()) {
+
         if (IsKeyDown('W')) cameraLat += cameraMoveSpeed;
         else if (IsKeyDown('S')) cameraLat -= cameraMoveSpeed;
         if (IsKeyDown('A')) cameraLon -= cameraMoveSpeed;
         else if (IsKeyDown('D')) cameraLon += cameraMoveSpeed;
         if (IsKeyDown('Q')) cameraRadius -= cameraZoomSpeed;
         else if (IsKeyDown('E')) cameraRadius += cameraZoomSpeed;
+
+        if (IsKeyDown('R')) randomizeCells(cells);
 
         if (cameraLat > 90) cameraLat = 89.99f;
         else if (cameraLat < -90) cameraLat = -89.99f;
@@ -190,17 +246,7 @@ int main(void) {
             ClearBackground(RAYWHITE);
 
             BeginMode3D(camera);
-            
-            for (int x = 0; x < CELL_BOUNDS; x++) {
-                for (int y = 0; y < CELL_BOUNDS; y++) {
-                    for (int z = 0; z < CELL_BOUNDS; z++) {
-                        cells[x][y][z].draw(GREEN);
-                    }
-                }
-            }
-
-            DrawCubeWires((Vector3){ 0, 0, 0 }, CELL_SIZE * CELL_BOUNDS, CELL_SIZE * CELL_BOUNDS, CELL_SIZE * CELL_BOUNDS, BLUE);
-
+            drawCells(cells);
             EndMode3D();
 
             DrawRectangle( 10, 10, 320, 133, Fade(SKYBLUE, 0.5f));
@@ -215,33 +261,7 @@ int main(void) {
 
         EndDrawing();
 
-        int offset_options[] = { -1, 0, 1 };
-        for (int x = 0; x < CELL_BOUNDS; x++) {
-            for (int y = 0; y < CELL_BOUNDS; y++) {
-                for (int z = 0; z < CELL_BOUNDS; z++) {
-                    cells[x][y][z].clearNeighbors();
-                    for (int i = 0; i < 3; i++) {
-                        for (int j = 0; j < 3; j++) {
-                            for (int k = 0; k < 3; k++) {
-                                if (!(i == 0 && j == 0 && k == 0) &&
-                                    x + offset_options[i] >= 0 && x + offset_options[i] < CELL_BOUNDS &&
-                                    y + offset_options[j] >= 0 && y + offset_options[j] < CELL_BOUNDS &&
-                                    z + offset_options[k] >= 0 && z + offset_options[k] < CELL_BOUNDS) {
-                                    cells[x][y][z].addNeighbor(cells[x + offset_options[i]][y + offset_options[j]][z + offset_options[k]].getState());
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        for (int x = 0; x < CELL_BOUNDS; x++) {
-            for (int y = 0; y < CELL_BOUNDS; y++) {
-                for (int z = 0; z < CELL_BOUNDS; z++) {
-                    cells[x][y][z].sync();
-                }
-            }
-        }
+        updateCells(cells);
     }
 
     CloseWindow();        // Close window and OpenGL context
