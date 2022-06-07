@@ -150,16 +150,35 @@ void updateCells(vector<vector<vector<Cell>>> &cells) {
         for (int y = 0; y < CELL_BOUNDS; y++) {
             for (int z = 0; z < CELL_BOUNDS; z++) {
                 cells[x][y][z].clearNeighbors();
-                int offset_options[] = { -1, 0, 1 };
-                for (int i = 0; i < 3; i++) {
-                    for (int j = 0; j < 3; j++) {
-                        for (int k = 0; k < 3; k++) {
-                            if (!(i == 0 && j == 0 && k == 0) &&
-                                x + offset_options[i] >= 0 && x + offset_options[i] < CELL_BOUNDS &&
-                                y + offset_options[j] >= 0 && y + offset_options[j] < CELL_BOUNDS &&
-                                z + offset_options[k] >= 0 && z + offset_options[k] < CELL_BOUNDS) {
-                                cells[x][y][z].addNeighbor(cells[x + offset_options[i]][y + offset_options[j]][z + offset_options[k]].getState());
+                if (NEIGHBORHOODS == MOORE) {
+                    int offset_options[] = { -1, 0, 1 };
+                    for (int i = 0; i < 3; i++) {
+                        for (int j = 0; j < 3; j++) {
+                            for (int k = 0; k < 3; k++) {
+                                if (!(i == 0 && j == 0 && k == 0) &&
+                                    x + offset_options[i] >= 0 && x + offset_options[i] < CELL_BOUNDS &&
+                                    y + offset_options[j] >= 0 && y + offset_options[j] < CELL_BOUNDS &&
+                                    z + offset_options[k] >= 0 && z + offset_options[k] < CELL_BOUNDS) {
+                                    cells[x][y][z].addNeighbor(cells[x + offset_options[i]][y + offset_options[j]][z + offset_options[k]].getState());
+                                }
                             }
+                        }
+                    }
+                }
+                else if (NEIGHBORHOODS == VON_NEUMANN) {
+                    int offsets[6][3] = {
+                        { 1, 0, 0 },
+                        { -1, 0, 0 },
+                        { 0, 1, 0 },
+                        { 0, -1, 0 },
+                        { 0, 0, 1 },
+                        { 0, 0, -1 }
+                    };
+                    for (auto offset : offsets) {
+                        if (x + offset[0] >= 0 && x + offset[0] < CELL_BOUNDS &&
+                            y + offset[1] >= 0 && y + offset[1] < CELL_BOUNDS &&
+                            z + offset[2] >= 0 && z + offset[2] < CELL_BOUNDS) {
+                            cells[x][y][z].addNeighbor(cells[x + offset[0]][y + offset[1]][z + offset[2]].getState());
                         }
                     }
                 }

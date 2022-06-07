@@ -6,6 +6,5 @@
 - Is VECTOR slower?
 - Left bar text as for loop?
     - Format: closer together
-- Von Neumann and moore rule options
 - On demand changes for bound, cell rules, (color, etc)
 - Menu screens etc?
