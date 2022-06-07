@@ -145,18 +145,6 @@ string textFromEnum(NeighborType nt) {
     return "";
 }
 
-void drawCells(const vector<vector<vector<Cell>>> &cells) {
-    for (int x = 0; x < CELL_BOUNDS; x++) {
-        for (int y = 0; y < CELL_BOUNDS; y++) {
-            for (int z = 0; z < CELL_BOUNDS; z++) {
-                cells[x][y][z].draw();
-            }
-        }
-    }
-    int outlineSize = CELL_SIZE * CELL_BOUNDS;
-    DrawCubeWires((Vector3){ 0, 0, 0 }, outlineSize, outlineSize, outlineSize, BLUE);
-}
-
 void updateCells(vector<vector<vector<Cell>>> &cells) {
     for (int x = 0; x < CELL_BOUNDS; x++) {
         for (int y = 0; y < CELL_BOUNDS; y++) {
@@ -178,12 +166,20 @@ void updateCells(vector<vector<vector<Cell>>> &cells) {
             }
         }
     }
+}
+
+void drawAndSyncCells(vector<vector<vector<Cell>>> &cells, bool toSync, bool drawBounds) {
     for (int x = 0; x < CELL_BOUNDS; x++) {
         for (int y = 0; y < CELL_BOUNDS; y++) {
             for (int z = 0; z < CELL_BOUNDS; z++) {
-                cells[x][y][z].sync();
+                if (toSync) cells[x][y][z].sync();
+                cells[x][y][z].draw();
             }
         }
+    }
+    if (drawBounds) {
+        int outlineSize = CELL_SIZE * CELL_BOUNDS;
+        DrawCubeWires((Vector3){ 0, 0, 0 }, outlineSize, outlineSize, outlineSize, BLUE);
     }
 }
 
@@ -222,11 +218,13 @@ int main(void) {
     float cameraZoomSpeed = 12.0f;
 
     bool paused = false;
+    bool drawBounds = true;
 
     ToggleKey mouseTK;
     ToggleKey enterTK;
     ToggleKey xTK;
     ToggleKey zTK;
+    ToggleKey bTK;
 
     int updateSpeed = 8;
     float frame = 0;
@@ -277,6 +275,9 @@ int main(void) {
         if (mouseTK.down(IsMouseButtonPressed(MOUSE_LEFT_BUTTON))) {
             paused = !paused;
         }
+        if (bTK.down(IsKeyPressed('B'))) {
+            drawBounds = !drawBounds;
+        }
         if (xTK.down(IsKeyDown('X'))) {
             updateSpeed++;
         }
@@ -310,8 +311,10 @@ int main(void) {
             cameraRadius * sin(degreesToRadians(cameraLat))
         };
 
+        bool toSync = false;
         if (!paused && frame >= 1.0f/updateSpeed) {
             updateCells(cells);
+            toSync = true;
             while (frame >= 1.0/updateSpeed) frame -= 1.0/updateSpeed;
         }
 
@@ -320,7 +323,7 @@ int main(void) {
             ClearBackground(RAYWHITE);
 
             BeginMode3D(camera);
-            drawCells(cells);
+                drawAndSyncCells(cells, toSync, drawBounds);
             EndMode3D();
 
             char dirs[2] = { 'N', 'W' };
@@ -358,8 +361,8 @@ int main(void) {
             // };
             // int lenTexts = sizeof(texts) / sizeof(texts[0]);
 
-            DrawRectangle( 10, 10, 270, 19 * 20 + 10, Fade(SKYBLUE, 0.5f));
-            DrawRectangleLines( 10, 10, 270, 19 * 20 + 10, BLUE);
+            DrawRectangle( 10, 10, 270, 20 * 20 + 10, Fade(SKYBLUE, 0.5f));
+            DrawRectangleLines( 10, 10, 270, 20 * 20 + 10, BLUE);
 
             // for (int i = 0; i < lenTexts; i++) {
             //     DrawText(texts[i], 20, 20 + i * 20, 10, DARKGRAY);
@@ -372,20 +375,21 @@ int main(void) {
             DrawText("- X/Z to increase/decrease tick speed", 40, 100, 10, DARKGRAY);
             DrawText("- Mouse click to pause/unpause", 40, 120, 10, DARKGRAY);
             DrawText("- R to re-randomize cells", 40, 140, 10, DARKGRAY);
-            DrawText("- Space to reset camera", 40, 160, 10, DARKGRAY);
-            DrawText("- Enter to toggle fullscreen", 40, 180, 10, DARKGRAY);
+            DrawText("- B to show/hide bounds", 40, 160, 10, DARKGRAY);
+            DrawText("- Space to reset camera", 40, 180, 10, DARKGRAY);
+            DrawText("- Enter to toggle fullscreen", 40, 200, 10, DARKGRAY);
 
-            DrawText("Simulation Info:", 20, 200, 10, BLACK);
-            DrawText(("- FPS: " + to_string(GetFPS())).c_str(), 40, 220, 10, DARKGRAY);
-            DrawText(("- Ticks per sec: " + to_string(updateSpeed)).c_str(), 40, 240, 10, DARKGRAY);
-            DrawText(("- Bound size: " + to_string(CELL_BOUNDS)).c_str(), 40, 260, 10, DARKGRAY);
-            DrawText(("- Camera pos: " + to_string((int)abs(cameraLat)) + dirs[0] + ", " + to_string((int)abs(cameraLon)) + dirs[1]).c_str(), 40, 280, 10, DARKGRAY);
+            DrawText("Simulation Info:", 20, 220, 10, BLACK);
+            DrawText(("- FPS: " + to_string(GetFPS())).c_str(), 40, 240, 10, DARKGRAY);
+            DrawText(("- Ticks per sec: " + to_string(updateSpeed)).c_str(), 40, 260, 10, DARKGRAY);
+            DrawText(("- Bound size: " + to_string(CELL_BOUNDS)).c_str(), 40, 280, 10, DARKGRAY);
+            DrawText(("- Camera pos: " + to_string((int)abs(cameraLat)) + dirs[0] + ", " + to_string((int)abs(cameraLon)) + dirs[1]).c_str(), 40, 300, 10, DARKGRAY);
 
-            DrawText("Rules:", 20, 300, 10, BLACK);
-            DrawText(survivalText.c_str(), 40, 320, 10, DARKGRAY);
-            DrawText(spawnText.c_str(), 40, 340, 10, DARKGRAY);
-            DrawText(("- State: " + to_string(STATE)).c_str(), 40, 360, 10, DARKGRAY);
-            DrawText(("- Neighborhoods: " + textFromEnum(NEIGHBORHOODS)).c_str(), 40, 380, 10, DARKGRAY);
+            DrawText("Rules:", 20, 320, 10, BLACK);
+            DrawText(survivalText.c_str(), 40, 340, 10, DARKGRAY);
+            DrawText(spawnText.c_str(), 40, 360, 10, DARKGRAY);
+            DrawText(("- State: " + to_string(STATE)).c_str(), 40, 380, 10, DARKGRAY);
+            DrawText(("- Neighborhoods: " + textFromEnum(NEIGHBORHOODS)).c_str(), 40, 400, 10, DARKGRAY);
 
         EndDrawing();
     }
