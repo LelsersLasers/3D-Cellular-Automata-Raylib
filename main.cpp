@@ -23,18 +23,18 @@ Rules/explaination:
     - Nothing can keep the cell from dying (even if neighbors change)
 - Neighbor:
     - [M]oore: counts diagonal neighbors (3^3 - 1 = 26 possible neighbors)
-    - [V]on [N]euman: only counts neighors where the faces touch
+    - [V]on [N]euman: only counts neighors where the faces touch (6 possible)
 */
 
 enum NeighborType {
     MOORE,
-    VON_NEUMAN
+    VON_NEUMANN
 };
 
 int SURVIVAL[] = { 4 };
 int SPAWN[] = { 4 };
 int STATE = 5;
-NeighborType NEIGHBOR = MOORE;
+NeighborType NEIGHBORHOODS = MOORE;
 
 
 enum State {
@@ -69,6 +69,7 @@ public:
     Cell() { randomizeState(); }
     void setPos(Vector3 pos) { this->pos = pos; }
     void clearNeighbors() { neighbors = 0; }
+    
     void addNeighbor(State neighborState) { neighbors += neighborState == ALIVE ? 1 : 0; }
     State getState() { return state; }
     void randomizeState() {
@@ -111,25 +112,33 @@ public:
         if (this->state != DEAD) {
             Color color = RED;
             if (this->state == DYING) {
-                unsigned char brightness = (int) ((float)this->hp/STATE * 255.0f);
-                // unsigned char brightness = (int) ((26.0f - (float)neighbors)/26 * 255.0f);
+                float percent = (1 + (float)this->hp)/(STATE + 2);
+                unsigned char brightness = (int)(percent * 255.0f);
                 color = (Color){ brightness, brightness, brightness, 255 };
             }
             DrawCube(this->pos, CELL_SIZE, CELL_SIZE, CELL_SIZE, color);
         }
     }
-    void draw(Color color) {
-        this->draw();
-        if (this->state != DEAD) {
-            DrawCubeWires(this->pos, CELL_SIZE, CELL_SIZE, CELL_SIZE, color);
-        }
-    }
+    // void draw(Color color) {
+    //     this->draw();
+    //     if (this->state != DEAD) {
+    //         DrawCubeWires(this->pos, CELL_SIZE, CELL_SIZE, CELL_SIZE, color);
+    //     }
+    // }
 
 };
 
 
 float degreesToRadians(float degrees) {
     return degrees * PI / 180.0f;
+}
+
+std::string textFromEnum(NeighborType nt) {
+    switch (nt) {
+        case MOORE: return "Moore";
+        case VON_NEUMANN: return "von Neumann";
+    }
+    return "";
 }
 
 void drawCells(Cell cells[CELL_BOUNDS][CELL_BOUNDS][CELL_BOUNDS]) {
@@ -189,10 +198,11 @@ int main(void) {
 
     srand(time(NULL));
 
-    const int screenWidth = 800;
-    const int screenHeight = 450;
+    const int screenWidth = 1200;
+    const int screenHeight = 675;
 
     InitWindow(screenWidth, screenHeight, "3D Cellular Automata");
+    SetWindowState(FLAG_WINDOW_RESIZABLE);
 
     Camera3D camera = { 0 };
     camera.position = (Vector3){ 10.0f, 10.0f, 10.0f }; // Camera position
@@ -210,7 +220,7 @@ int main(void) {
     bool paused = false;
 
     ToggleKey mouseTK;
-    ToggleKey spaceTK;
+    ToggleKey enterTK;
     ToggleKey xTK;
     ToggleKey zTK;
 
@@ -267,10 +277,20 @@ int main(void) {
         if (zTK.down(IsKeyDown('Z'))) {
             if (updateSpeed > 1) updateSpeed--;
         }
-        if (spaceTK.down(IsKeyDown(KEY_SPACE))) {
+        if (IsKeyDown(KEY_SPACE)) {
             cameraLat = 20.0f;
             cameraLon = 20.0f;
             cameraRadius = 2.0f * CELL_SIZE * CELL_BOUNDS;
+        }
+        if (enterTK.down(IsKeyPressed(KEY_ENTER))) {
+            ToggleFullscreen();
+            if (IsWindowFullscreen()) {
+                int display = GetCurrentMonitor();
+                SetWindowSize(GetMonitorWidth(display), GetMonitorHeight(display));
+            }
+            else {
+                SetWindowSize(screenWidth, screenHeight);
+            }
         }
 
         if (cameraLat > 90) cameraLat = 89.99f;
@@ -304,10 +324,16 @@ int main(void) {
             if (cameraLon < 0) {
                 dirs[1] = 'E';
             }
-
+            std::string survivalText = "- Survive:";
+            for (int value : SURVIVAL) {
+                survivalText += " " + std::to_string(value);
+            }
+            std::string spawnText = "- Spawn:";
+            for (int value : SPAWN) {
+                spawnText += " " + std::to_string(value);
+            }
             // const char* fpsText = ("- FPS: " + std::to_string((int)(1.0f/delta))).c_str();
-            const char* cameraText = ("- Camera pos: " + std::to_string((int)abs(cameraLat)) + dirs[0] + ", " + std::to_string((int)abs(cameraLon)) + dirs[1]).c_str();
-
+            // const char* cameraText = ("- Camera pos: " + std::to_string((int)abs(cameraLat)) + dirs[0] + ", " + std::to_string((int)abs(cameraLon)) + dirs[1]).c_str();
             // const char* texts[] = {
             //     "Controls:",
             //     "- Q/E to zoom in/out",
@@ -326,8 +352,8 @@ int main(void) {
             // };
             // int lenTexts = sizeof(texts) / sizeof(texts[0]);
 
-            DrawRectangle( 10, 10, 270, 13 * 20 + 10, Fade(SKYBLUE, 0.5f));
-            DrawRectangleLines( 10, 10, 270, 13 * 20 + 10, BLUE);
+            DrawRectangle( 10, 10, 270, 19 * 20 + 10, Fade(SKYBLUE, 0.5f));
+            DrawRectangleLines( 10, 10, 270, 19 * 20 + 10, BLUE);
 
             // for (int i = 0; i < lenTexts; i++) {
             //     DrawText(texts[i], 20, 20 + i * 20, 10, DARKGRAY);
@@ -341,14 +367,19 @@ int main(void) {
             DrawText("- Mouse click to pause/unpause", 40, 120, 10, DARKGRAY);
             DrawText("- R to re-randomize cells", 40, 140, 10, DARKGRAY);
             DrawText("- Space to reset camera", 40, 160, 10, DARKGRAY);
+            DrawText("- Enter to toggle fullscreen", 40, 180, 10, DARKGRAY);
 
-            DrawText("Simulation Info:", 20, 180, 10, BLACK);
-            DrawText(("- FPS: " + std::to_string(GetFPS())).c_str(), 40, 200, 10, DARKGRAY);
-            DrawText(("- Ticks per sec: " + std::to_string(updateSpeed)).c_str(), 40, 220, 10, DARKGRAY);
-            DrawText(("- Bound size: " + std::to_string(CELL_BOUNDS)).c_str(), 40, 240, 10, DARKGRAY);
-            
-            DrawText(cameraText, 40, 260, 10, DARKGRAY);
-            // draw text: rules, etc
+            DrawText("Simulation Info:", 20, 200, 10, BLACK);
+            DrawText(("- FPS: " + std::to_string(GetFPS())).c_str(), 40, 220, 10, DARKGRAY);
+            DrawText(("- Ticks per sec: " + std::to_string(updateSpeed)).c_str(), 40, 240, 10, DARKGRAY);
+            DrawText(("- Bound size: " + std::to_string(CELL_BOUNDS)).c_str(), 40, 260, 10, DARKGRAY);
+            DrawText(("- Camera pos: " + std::to_string((int)abs(cameraLat)) + dirs[0] + ", " + std::to_string((int)abs(cameraLon)) + dirs[1]).c_str(), 40, 280, 10, DARKGRAY);
+
+            DrawText("Rules:", 20, 300, 10, BLACK);
+            DrawText(survivalText.c_str(), 40, 320, 10, DARKGRAY);
+            DrawText(spawnText.c_str(), 40, 340, 10, DARKGRAY);
+            DrawText(("- State: " + std::to_string(STATE)).c_str(), 40, 360, 10, DARKGRAY);
+            DrawText(("- Neighborhoods: " + textFromEnum(NEIGHBORHOODS)).c_str(), 40, 380, 10, DARKGRAY);
 
         EndDrawing();
     }
