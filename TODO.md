@@ -6,4 +6,4 @@
 - On demand changes for bound and cell rules
 - Menu screens etc?
 - All features from previous version
-    - toggle key for update speed and draw modes
+    - Draw modes?

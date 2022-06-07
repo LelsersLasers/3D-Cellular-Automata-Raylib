@@ -8,7 +8,7 @@
 #define PI 3.14159265358979323846
 
 #define CELL_SIZE 1.0f
-#define CELL_BOUNDS 30
+#define CELL_BOUNDS 38
 #define aliveChanceOnSpawn 0.2
 
 
@@ -205,7 +205,7 @@ int main(void) {
     float cameraLon = 20.0f;
     float cameraRadius = 2.0f * CELL_SIZE * CELL_BOUNDS;
     float cameraMoveSpeed = 180.0f/4.0f;
-    float cameraZoomSpeed = 10.0f;
+    float cameraZoomSpeed = 12.0f;
 
     bool paused = false;
 
@@ -237,17 +237,33 @@ int main(void) {
         float delta = GetFrameTime();
         frame += delta;
 
-        if (IsKeyDown('W') || IsKeyDown(KEY_UP)) cameraLat += cameraMoveSpeed * delta;
-        else if (IsKeyDown('S') || IsKeyDown(KEY_DOWN)) cameraLat -= cameraMoveSpeed * delta;
-        if (IsKeyDown('A') || IsKeyDown(KEY_LEFT)) cameraLon -= cameraMoveSpeed * delta;
-        else if (IsKeyDown('D')|| IsKeyDown(KEY_RIGHT)) cameraLon += cameraMoveSpeed * delta;
-        if (IsKeyDown('Q')) cameraRadius -= cameraZoomSpeed * delta;
-        else if (IsKeyDown('E')) cameraRadius += cameraZoomSpeed * delta;
-
-        if (IsKeyDown('R')) randomizeCells(cells);
-
-        if (mouseTK.down(IsMouseButtonPressed(MOUSE_LEFT_BUTTON))) paused = !paused;
-        if (xTK.down(IsKeyDown('X'))) updateSpeed++;
+        if (IsKeyDown('W') || IsKeyDown(KEY_UP)) {
+            cameraLat += cameraMoveSpeed * delta;
+        }
+        if (IsKeyDown('S') || IsKeyDown(KEY_DOWN)) {
+            cameraLat -= cameraMoveSpeed * delta;
+        }
+        if (IsKeyDown('A') || IsKeyDown(KEY_LEFT)) {
+            cameraLon -= cameraMoveSpeed * delta;
+        }
+        if (IsKeyDown('D')|| IsKeyDown(KEY_RIGHT)) {
+            cameraLon += cameraMoveSpeed * delta;
+        }
+        if (IsKeyDown('Q') || IsKeyDown(KEY_PAGE_UP)) {
+            cameraRadius -= cameraZoomSpeed * delta;
+        }
+        if (IsKeyDown('E') || IsKeyDown(KEY_PAGE_DOWN)) {
+            cameraRadius += cameraZoomSpeed * delta;
+        }
+        if (IsKeyDown('R')) {
+            randomizeCells(cells);
+        }
+        if (mouseTK.down(IsMouseButtonPressed(MOUSE_LEFT_BUTTON))) {
+            paused = !paused;
+        }
+        if (xTK.down(IsKeyDown('X'))) {
+            updateSpeed++;
+        }
         if (zTK.down(IsKeyDown('Z'))) {
             if (updateSpeed > 1) updateSpeed--;
         };
@@ -276,17 +292,32 @@ int main(void) {
             drawCells(cells);
             EndMode3D();
 
-            DrawRectangle( 10, 10, 320, 133, Fade(SKYBLUE, 0.5f));
-            DrawRectangleLines( 10, 10, 320, 133, BLUE);
+            DrawRectangle( 10, 10, 270, 250, Fade(SKYBLUE, 0.5f));
+            DrawRectangleLines( 10, 10, 270, 250, BLUE);
 
             DrawText("Controls:", 20, 20, 10, BLACK);
             DrawText("- Q to zoom in, E to zoom out", 40, 40, 10, DARKGRAY);
             DrawText("- W to rotate camera up, S to rotate down", 40, 60, 10, DARKGRAY);
             DrawText("- A to rotate left, D to rotate right", 40, 80, 10, DARKGRAY);
-            DrawText("- R to re-randomize the cells", 40, 100, 10, DARKGRAY);
-            std::string fpsText = "- FPS: " + std::to_string(GetFPS());
-            DrawText(fpsText.c_str(), 40, 120, 10, DARKGRAY);
-            // draw text: info - fps, dist, camera coords, update speed, bounds, rules, etc
+            DrawText("- X to increase tick speed, Z to decrease", 40, 100, 10, DARKGRAY);
+            DrawText("- R to re-randomize the cells", 40, 120, 10, DARKGRAY);
+            DrawText("- Left mouse click to pause", 40, 140, 10, DARKGRAY);
+
+            DrawText("Simulation Info:", 20, 160, 10, BLACK);
+            DrawText(("- FPS: " + std::to_string(GetFPS())).c_str(), 40, 180, 10, DARKGRAY);
+            DrawText(("- Ticks per sec: " + std::to_string(updateSpeed)).c_str(), 40, 200, 10, DARKGRAY);
+            DrawText(("- Bound size: " + std::to_string(CELL_BOUNDS)).c_str(), 40, 220, 10, DARKGRAY);
+
+            char dirs[2] = { 'N', 'W' };
+            if (cameraLat < 0) {
+                dirs[0] = 'S';
+            }
+            if (cameraLon < 0) {
+                dirs[1] = 'E';
+            }
+            const char* cameraText = ("- Camera pos: " + std::to_string((int)abs(cameraLat)) + dirs[0] + ", " + std::to_string((int)abs(cameraLon)) + dirs[1]).c_str();
+            DrawText(cameraText, 40, 240, 10, DARKGRAY);
+            // draw text: rules, etc
 
         EndDrawing();
     }
