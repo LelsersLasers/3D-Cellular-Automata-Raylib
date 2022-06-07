@@ -9,7 +9,7 @@ using namespace std;
 #define PI 3.14159265358979323846
 
 #define CELL_SIZE 1.0f
-#define CELL_BOUNDS 40
+#define CELL_BOUNDS 60
 #define aliveChanceOnSpawn 0.2
 
 
@@ -64,7 +64,7 @@ public:
 class Cell {
 private:
     State state;
-    Vector3 pos = { 0.0f, 0.0f, 0.0f }; // center of cube, make sure to call setPos() before using
+    Vector3 pos;
     int hp = STATE;
     int neighbors = 0;
 public:
@@ -75,7 +75,7 @@ public:
     void clearNeighbors() { neighbors = 0; }
     
     void addNeighbor(State neighborState) { neighbors += neighborState == ALIVE ? 1 : 0; }
-    State getState() { return state; }
+    State getState() const { return state; }
     void randomizeState() {
         state = (double)rand() / (double)RAND_MAX < aliveChanceOnSpawn ? ALIVE : DEAD;
         hp = STATE;
@@ -112,7 +112,7 @@ public:
         }
     }
 
-    void draw() {
+    void draw() const {
         if (this->state != DEAD) {
             Color color = RED;
             if (this->state == DYING) {
@@ -123,7 +123,7 @@ public:
             DrawCube(this->pos, CELL_SIZE, CELL_SIZE, CELL_SIZE, color);
         }
     }
-    // void draw(Color color) {
+    // void draw(Color color) const {
     //     this->draw();
     //     if (this->state != DEAD) {
     //         DrawCubeWires(this->pos, CELL_SIZE, CELL_SIZE, CELL_SIZE, color);
@@ -145,7 +145,7 @@ string textFromEnum(NeighborType nt) {
     return "";
 }
 
-void drawCells(vector<vector<vector<Cell>>> cells) {
+void drawCells(const vector<vector<vector<Cell>>> &cells) {
     for (int x = 0; x < CELL_BOUNDS; x++) {
         for (int y = 0; y < CELL_BOUNDS; y++) {
             for (int z = 0; z < CELL_BOUNDS; z++) {
@@ -157,7 +157,7 @@ void drawCells(vector<vector<vector<Cell>>> cells) {
     DrawCubeWires((Vector3){ 0, 0, 0 }, outlineSize, outlineSize, outlineSize, BLUE);
 }
 
-vector<vector<vector<Cell>>> updateCells(vector<vector<vector<Cell>>> cells) {
+void updateCells(vector<vector<vector<Cell>>> &cells) {
     for (int x = 0; x < CELL_BOUNDS; x++) {
         for (int y = 0; y < CELL_BOUNDS; y++) {
             for (int z = 0; z < CELL_BOUNDS; z++) {
@@ -185,10 +185,9 @@ vector<vector<vector<Cell>>> updateCells(vector<vector<vector<Cell>>> cells) {
             }
         }
     }
-    return cells;
 }
 
-vector<vector<vector<Cell>>> randomizeCells(vector<vector<vector<Cell>>> cells) {
+void randomizeCells(vector<vector<vector<Cell>>> &cells) {
     for (int x = 0; x < CELL_BOUNDS; x++) {
         for (int y = 0; y < CELL_BOUNDS; y++) {
             for (int z = 0; z < CELL_BOUNDS; z++) {
@@ -196,7 +195,6 @@ vector<vector<vector<Cell>>> randomizeCells(vector<vector<vector<Cell>>> cells) 
             }
         }
     }
-    return cells;
 }
 
 
@@ -274,7 +272,7 @@ int main(void) {
             cameraRadius += cameraZoomSpeed * delta;
         }
         if (IsKeyDown('R')) {
-            cells = randomizeCells(cells);
+            randomizeCells(cells);
         }
         if (mouseTK.down(IsMouseButtonPressed(MOUSE_LEFT_BUTTON))) {
             paused = !paused;
@@ -313,7 +311,7 @@ int main(void) {
         };
 
         if (!paused && frame >= 1.0f/updateSpeed) {
-            cells = updateCells(cells);
+            updateCells(cells);
             while (frame >= 1.0/updateSpeed) frame -= 1.0/updateSpeed;
         }
 
