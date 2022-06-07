@@ -1,14 +1,15 @@
 #include "raylib.h"
 #include <math.h>
 #include <time.h>
+#include <vector>
 
 #include <iostream>
-// using namespace std;
+using namespace std;
 
 #define PI 3.14159265358979323846
 
 #define CELL_SIZE 1.0f
-#define CELL_BOUNDS 38
+#define CELL_BOUNDS 40
 #define aliveChanceOnSpawn 0.2
 
 
@@ -56,6 +57,7 @@ public:
         else if (!pressState) wasDown = false;
         return false;
     } 
+    
 };
 
 
@@ -66,8 +68,10 @@ private:
     int hp = STATE;
     int neighbors = 0;
 public:
-    Cell() { randomizeState(); }
-    void setPos(Vector3 pos) { this->pos = pos; }
+    Cell(Vector3 pos) {
+        this->pos = pos;
+        randomizeState();
+    }
     void clearNeighbors() { neighbors = 0; }
     
     void addNeighbor(State neighborState) { neighbors += neighborState == ALIVE ? 1 : 0; }
@@ -133,7 +137,7 @@ float degreesToRadians(float degrees) {
     return degrees * PI / 180.0f;
 }
 
-std::string textFromEnum(NeighborType nt) {
+string textFromEnum(NeighborType nt) {
     switch (nt) {
         case MOORE: return "Moore";
         case VON_NEUMANN: return "von Neumann";
@@ -141,7 +145,7 @@ std::string textFromEnum(NeighborType nt) {
     return "";
 }
 
-void drawCells(Cell cells[CELL_BOUNDS][CELL_BOUNDS][CELL_BOUNDS]) {
+void drawCells(vector<vector<vector<Cell>>> cells) {
     for (int x = 0; x < CELL_BOUNDS; x++) {
         for (int y = 0; y < CELL_BOUNDS; y++) {
             for (int z = 0; z < CELL_BOUNDS; z++) {
@@ -153,7 +157,7 @@ void drawCells(Cell cells[CELL_BOUNDS][CELL_BOUNDS][CELL_BOUNDS]) {
     DrawCubeWires((Vector3){ 0, 0, 0 }, outlineSize, outlineSize, outlineSize, BLUE);
 }
 
-void updateCells(Cell cells[CELL_BOUNDS][CELL_BOUNDS][CELL_BOUNDS]) {
+vector<vector<vector<Cell>>> updateCells(vector<vector<vector<Cell>>> cells) {
     for (int x = 0; x < CELL_BOUNDS; x++) {
         for (int y = 0; y < CELL_BOUNDS; y++) {
             for (int z = 0; z < CELL_BOUNDS; z++) {
@@ -181,9 +185,10 @@ void updateCells(Cell cells[CELL_BOUNDS][CELL_BOUNDS][CELL_BOUNDS]) {
             }
         }
     }
+    return cells;
 }
 
-void randomizeCells(Cell cells[CELL_BOUNDS][CELL_BOUNDS][CELL_BOUNDS]) {
+vector<vector<vector<Cell>>> randomizeCells(vector<vector<vector<Cell>>> cells) {
     for (int x = 0; x < CELL_BOUNDS; x++) {
         for (int y = 0; y < CELL_BOUNDS; y++) {
             for (int z = 0; z < CELL_BOUNDS; z++) {
@@ -191,6 +196,7 @@ void randomizeCells(Cell cells[CELL_BOUNDS][CELL_BOUNDS][CELL_BOUNDS]) {
             }
         }
     }
+    return cells;
 }
 
 
@@ -227,19 +233,21 @@ int main(void) {
     int updateSpeed = 8;
     float frame = 0;
 
-
-    Cell cells[CELL_BOUNDS][CELL_BOUNDS][CELL_BOUNDS]; // calls default consturctor
+    vector<vector<vector<Cell>>> cells;
     for (int x = 0; x < CELL_BOUNDS; x++) {
+        cells.push_back(vector<vector<Cell>>());
         for (int y = 0; y < CELL_BOUNDS; y++) {
+            cells[x].push_back(vector<Cell>());
             for (int z = 0; z < CELL_BOUNDS; z++) {
-                cells[x][y][z].setPos((Vector3){
+                cells[x][y].push_back(Cell((Vector3){
                     CELL_SIZE * (x - (CELL_BOUNDS - 1.0f) / 2.0f),
                     CELL_SIZE * (y - (CELL_BOUNDS - 1.0f) / 2.0f),
                     CELL_SIZE * (z - (CELL_BOUNDS - 1.0f) / 2.0f)
-                });
+                }));
             }
         }
     }
+        
 
     // Main game loop
     while (!WindowShouldClose()) {
@@ -266,7 +274,7 @@ int main(void) {
             cameraRadius += cameraZoomSpeed * delta;
         }
         if (IsKeyDown('R')) {
-            randomizeCells(cells);
+            cells = randomizeCells(cells);
         }
         if (mouseTK.down(IsMouseButtonPressed(MOUSE_LEFT_BUTTON))) {
             paused = !paused;
@@ -305,7 +313,7 @@ int main(void) {
         };
 
         if (!paused && frame >= 1.0f/updateSpeed) {
-            updateCells(cells);
+            cells = updateCells(cells);
             while (frame >= 1.0/updateSpeed) frame -= 1.0/updateSpeed;
         }
 
@@ -324,16 +332,16 @@ int main(void) {
             if (cameraLon < 0) {
                 dirs[1] = 'E';
             }
-            std::string survivalText = "- Survive:";
+            string survivalText = "- Survive:";
             for (int value : SURVIVAL) {
-                survivalText += " " + std::to_string(value);
+                survivalText += " " + to_string(value);
             }
-            std::string spawnText = "- Spawn:";
+            string spawnText = "- Spawn:";
             for (int value : SPAWN) {
-                spawnText += " " + std::to_string(value);
+                spawnText += " " + to_string(value);
             }
-            // const char* fpsText = ("- FPS: " + std::to_string((int)(1.0f/delta))).c_str();
-            // const char* cameraText = ("- Camera pos: " + std::to_string((int)abs(cameraLat)) + dirs[0] + ", " + std::to_string((int)abs(cameraLon)) + dirs[1]).c_str();
+            // const char* fpsText = ("- FPS: " + to_string((int)(1.0f/delta))).c_str();
+            // const char* cameraText = ("- Camera pos: " + to_string((int)abs(cameraLat)) + dirs[0] + ", " + to_string((int)abs(cameraLon)) + dirs[1]).c_str();
             // const char* texts[] = {
             //     "Controls:",
             //     "- Q/E to zoom in/out",
@@ -345,8 +353,8 @@ int main(void) {
             //     "- Space to reset camera",
             //     "Simulation Info:",
             //     fpsText,
-            //     ("- Ticks per sec: " + std::to_string(updateSpeed)).c_str(),
-            //     ("- Bound size: " + std::to_string(CELL_BOUNDS)).c_str(),
+            //     ("- Ticks per sec: " + to_string(updateSpeed)).c_str(),
+            //     ("- Bound size: " + to_string(CELL_BOUNDS)).c_str(),
             //     cameraText,
 
             // };
@@ -370,15 +378,15 @@ int main(void) {
             DrawText("- Enter to toggle fullscreen", 40, 180, 10, DARKGRAY);
 
             DrawText("Simulation Info:", 20, 200, 10, BLACK);
-            DrawText(("- FPS: " + std::to_string(GetFPS())).c_str(), 40, 220, 10, DARKGRAY);
-            DrawText(("- Ticks per sec: " + std::to_string(updateSpeed)).c_str(), 40, 240, 10, DARKGRAY);
-            DrawText(("- Bound size: " + std::to_string(CELL_BOUNDS)).c_str(), 40, 260, 10, DARKGRAY);
-            DrawText(("- Camera pos: " + std::to_string((int)abs(cameraLat)) + dirs[0] + ", " + std::to_string((int)abs(cameraLon)) + dirs[1]).c_str(), 40, 280, 10, DARKGRAY);
+            DrawText(("- FPS: " + to_string(GetFPS())).c_str(), 40, 220, 10, DARKGRAY);
+            DrawText(("- Ticks per sec: " + to_string(updateSpeed)).c_str(), 40, 240, 10, DARKGRAY);
+            DrawText(("- Bound size: " + to_string(CELL_BOUNDS)).c_str(), 40, 260, 10, DARKGRAY);
+            DrawText(("- Camera pos: " + to_string((int)abs(cameraLat)) + dirs[0] + ", " + to_string((int)abs(cameraLon)) + dirs[1]).c_str(), 40, 280, 10, DARKGRAY);
 
             DrawText("Rules:", 20, 300, 10, BLACK);
             DrawText(survivalText.c_str(), 40, 320, 10, DARKGRAY);
             DrawText(spawnText.c_str(), 40, 340, 10, DARKGRAY);
-            DrawText(("- State: " + std::to_string(STATE)).c_str(), 40, 360, 10, DARKGRAY);
+            DrawText(("- State: " + to_string(STATE)).c_str(), 40, 360, 10, DARKGRAY);
             DrawText(("- Neighborhoods: " + textFromEnum(NEIGHBORHOODS)).c_str(), 40, 380, 10, DARKGRAY);
 
         EndDrawing();
