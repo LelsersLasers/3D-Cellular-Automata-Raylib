@@ -136,7 +136,7 @@ void drawCells(Cell cells[CELL_BOUNDS][CELL_BOUNDS][CELL_BOUNDS]) {
     for (int x = 0; x < CELL_BOUNDS; x++) {
         for (int y = 0; y < CELL_BOUNDS; y++) {
             for (int z = 0; z < CELL_BOUNDS; z++) {
-                cells[x][y][z].draw(GREEN);
+                cells[x][y][z].draw();
             }
         }
     }
@@ -266,7 +266,12 @@ int main(void) {
         }
         if (zTK.down(IsKeyDown('Z'))) {
             if (updateSpeed > 1) updateSpeed--;
-        };
+        }
+        if (spaceTK.down(IsKeyDown(KEY_SPACE))) {
+            cameraLat = 20.0f;
+            cameraLon = 20.0f;
+            cameraRadius = 2.0f * CELL_SIZE * CELL_BOUNDS;
+        }
 
         if (cameraLat > 90) cameraLat = 89.99f;
         else if (cameraLat < -90) cameraLat = -89.99f;
@@ -292,22 +297,6 @@ int main(void) {
             drawCells(cells);
             EndMode3D();
 
-            DrawRectangle( 10, 10, 270, 250, Fade(SKYBLUE, 0.5f));
-            DrawRectangleLines( 10, 10, 270, 250, BLUE);
-
-            DrawText("Controls:", 20, 20, 10, BLACK);
-            DrawText("- Q to zoom in, E to zoom out", 40, 40, 10, DARKGRAY);
-            DrawText("- W to rotate camera up, S to rotate down", 40, 60, 10, DARKGRAY);
-            DrawText("- A to rotate left, D to rotate right", 40, 80, 10, DARKGRAY);
-            DrawText("- X to increase tick speed, Z to decrease", 40, 100, 10, DARKGRAY);
-            DrawText("- R to re-randomize the cells", 40, 120, 10, DARKGRAY);
-            DrawText("- Left mouse click to pause", 40, 140, 10, DARKGRAY);
-
-            DrawText("Simulation Info:", 20, 160, 10, BLACK);
-            DrawText(("- FPS: " + std::to_string(GetFPS())).c_str(), 40, 180, 10, DARKGRAY);
-            DrawText(("- Ticks per sec: " + std::to_string(updateSpeed)).c_str(), 40, 200, 10, DARKGRAY);
-            DrawText(("- Bound size: " + std::to_string(CELL_BOUNDS)).c_str(), 40, 220, 10, DARKGRAY);
-
             char dirs[2] = { 'N', 'W' };
             if (cameraLat < 0) {
                 dirs[0] = 'S';
@@ -315,8 +304,50 @@ int main(void) {
             if (cameraLon < 0) {
                 dirs[1] = 'E';
             }
+
+            // const char* fpsText = ("- FPS: " + std::to_string((int)(1.0f/delta))).c_str();
             const char* cameraText = ("- Camera pos: " + std::to_string((int)abs(cameraLat)) + dirs[0] + ", " + std::to_string((int)abs(cameraLon)) + dirs[1]).c_str();
-            DrawText(cameraText, 40, 240, 10, DARKGRAY);
+
+            // const char* texts[] = {
+            //     "Controls:",
+            //     "- Q/E to zoom in/out",
+            //     "- W/S to rotate camera up/down",
+            //     "- A/D to rotate camera left/right",
+            //     "- R to randomize cells",
+            //     "- X/Z to increase/decrease tick speed",
+            //     "- Mouse click to pause/unpause",
+            //     "- Space to reset camera",
+            //     "Simulation Info:",
+            //     fpsText,
+            //     ("- Ticks per sec: " + std::to_string(updateSpeed)).c_str(),
+            //     ("- Bound size: " + std::to_string(CELL_BOUNDS)).c_str(),
+            //     cameraText,
+
+            // };
+            // int lenTexts = sizeof(texts) / sizeof(texts[0]);
+
+            DrawRectangle( 10, 10, 270, 13 * 20 + 10, Fade(SKYBLUE, 0.5f));
+            DrawRectangleLines( 10, 10, 270, 13 * 20 + 10, BLUE);
+
+            // for (int i = 0; i < lenTexts; i++) {
+            //     DrawText(texts[i], 20, 20 + i * 20, 10, DARKGRAY);
+            // }
+
+            DrawText("Controls:", 20, 20, 10, BLACK);
+            DrawText("- Q/E to zoom in/out", 40, 40, 10, DARKGRAY);
+            DrawText("- W/S to rotate camera up/down", 40, 60, 10, DARKGRAY);
+            DrawText("- A/D to rotate camera left/right", 40, 80, 10, DARKGRAY);
+            DrawText("- X/Z to increase/decrease tick speed", 40, 100, 10, DARKGRAY);
+            DrawText("- Mouse click to pause/unpause", 40, 120, 10, DARKGRAY);
+            DrawText("- R to re-randomize cells", 40, 140, 10, DARKGRAY);
+            DrawText("- Space to reset camera", 40, 160, 10, DARKGRAY);
+
+            DrawText("Simulation Info:", 20, 180, 10, BLACK);
+            DrawText(("- FPS: " + std::to_string(GetFPS())).c_str(), 40, 200, 10, DARKGRAY);
+            DrawText(("- Ticks per sec: " + std::to_string(updateSpeed)).c_str(), 40, 220, 10, DARKGRAY);
+            DrawText(("- Bound size: " + std::to_string(CELL_BOUNDS)).c_str(), 40, 240, 10, DARKGRAY);
+            
+            DrawText(cameraText, 40, 260, 10, DARKGRAY);
             // draw text: rules, etc
 
         EndDrawing();
