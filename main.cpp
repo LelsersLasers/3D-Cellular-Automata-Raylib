@@ -9,7 +9,7 @@ using namespace std;
 #define PI 3.14159265358979323846
 
 #define CELL_SIZE 1.0f
-#define CELL_BOUNDS 50
+#define CELL_BOUNDS 66
 #define aliveChanceOnSpawn 0.15f
 
 
