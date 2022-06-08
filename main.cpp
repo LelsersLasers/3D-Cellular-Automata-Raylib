@@ -69,7 +69,6 @@ const Vector3 COLOR_OFFSET = {
 };
 
 const int TargetFPS = 20;
-const int TargetPad = 5;
 
 
 class ToggleKey {
@@ -523,13 +522,12 @@ int main(void) {
             cameraRadius * sin(degreesToRadians(cameraLat))
         };
 
-        if (tickMode == DYNAMIC && !paused) {
-            if (GetFPS() + TargetPad > TargetFPS) updateSpeed++;
-            else if (GetFPS() - TargetPad < TargetFPS && updateSpeed > 1) updateSpeed--;
-        }
-
         bool toSync = false;
         if (!paused && (tickMode == FAST || frame >= 1.0f/updateSpeed)) {
+            if (tickMode == DYNAMIC && !paused) {
+                if (GetFPS() > TargetFPS && updateSpeed < GetFPS()) updateSpeed++;
+                else if (GetFPS() < TargetFPS && updateSpeed > 1) updateSpeed--;
+            }
             updateCells(cells);
             toSync = true;
             while (frame >= 1.0/updateSpeed) frame -= 1.0/updateSpeed;
