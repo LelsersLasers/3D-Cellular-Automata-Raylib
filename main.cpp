@@ -40,9 +40,9 @@ enum State {
 
 enum DrawMode {
     DUAL_COLOR_1 = 0,
-    DUAL_COLOR_DYING = 1,
-    SINGLE_COLOR = 2,
-    RGB_CUBE = 3,
+    RGB_CUBE = 1,
+    DUAL_COLOR_DYING = 2,
+    SINGLE_COLOR = 3,
     CENTER_DIST = 4
 };
 
@@ -384,6 +384,13 @@ void drawAndSyncCells(vector<vector<vector<Cell>>> &cells, int divisor, DrawMode
             }
             break;
     }
+    for (int x = CELL_BOUNDS/divisor; x < CELL_BOUNDS; x++) { // still sync second half
+        for (int y = 0; y < CELL_BOUNDS; y++) {
+            for (int z = 0; z < CELL_BOUNDS; z++) {
+                cells[x][y][z].sync();
+            }
+        }
+    }
 }
 
 void basicDrawCells(const vector<vector<vector<Cell>>> &cells, int divisor, DrawMode drawMode) {
@@ -613,7 +620,7 @@ int main(void) {
 
         bool toSync = false;
         if (!paused && (tickMode == FAST || frame >= 1.0f/updateSpeed)) {
-            if (tickMode == DYNAMIC && !paused) {
+            if (tickMode == DYNAMIC) {
                 if (GetFPS() > TargetFPS && updateSpeed < GetFPS()) updateSpeed++;
                 else if (GetFPS() < TargetFPS && updateSpeed > 1) updateSpeed--;
             }
