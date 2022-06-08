@@ -61,6 +61,25 @@ public:
 };
 
 
+class DrawableText {
+private:
+    string text;
+public:
+    DrawableText(string text) {
+        this->text = text;
+    }
+    void draw(int i) {
+        int x = 40;
+        Color color = DARKGRAY;
+        if (text[0] != '-') {
+            x = 20;
+            color = BLACK;
+        }
+        DrawText(text.c_str(), x, (i + 1) * 14, 10, color);
+    }
+};
+
+
 class Cell {
 private:
     State state;
@@ -155,7 +174,7 @@ void updateCells(vector<vector<vector<Cell>>> &cells) {
     for (int x = 0; x < CELL_BOUNDS; x++) {
         for (int y = 0; y < CELL_BOUNDS; y++) {
             for (int z = 0; z < CELL_BOUNDS; z++) {
-                Vector3 idx = { x, y, z };
+                Vector3 idx = { (float)x, (float)y, (float)z };
                 cells[x][y][z].clearNeighbors();
                 if (NEIGHBORHOODS == MOORE) {
                     int offset_options[] = { -1, 0, 1 };
@@ -212,6 +231,57 @@ void randomizeCells(vector<vector<vector<Cell>>> &cells) {
                 cells[x][y][z].randomizeState();
             }
         }
+    }
+}
+
+void drawLeftBar(float cameraLat, float cameraLon, bool paused, int updateSpeed) {
+    char dirs[2] = { 'N', 'W' };
+    if (cameraLat < 0) {
+        dirs[0] = 'S';
+    }
+    if (cameraLon < 0) {
+        dirs[1] = 'E';
+    }
+    string survivalText = "- Survive:";
+    for (int value : SURVIVAL) {
+        survivalText += " " + to_string(value);
+    }
+    string spawnText = "- Spawn:";
+    for (int value : SPAWN) {
+        spawnText += " " + to_string(value);
+    }
+
+    DrawableText dts[] = {
+        DrawableText("Controls:"),
+        DrawableText("- Q/E to zoom in/out"),
+        DrawableText("- W/S to rotate camera up/down"),
+        DrawableText("- A/D to rotate camera left/right"),
+        DrawableText("- X/Z to increase/decrease tick speed"),
+        DrawableText("- Mouse click to pause/unpause"),
+        DrawableText("- R to re-randomize cells"),
+        DrawableText("- B to show/hide bounds"),
+        DrawableText("- Space to reset camera"),
+        DrawableText("- Enter to toggle fullscreen"),
+
+        DrawableText((string)"Simulation Info: " + (string)(paused ? "paused" : "running")),
+        DrawableText("- FPS: " + to_string(GetFPS())),
+        DrawableText("- Ticks per sec: " + to_string(updateSpeed)),
+        DrawableText("- Bound size: " + to_string(CELL_BOUNDS)),
+        DrawableText("- Camera pos: " + to_string((int)abs(cameraLat)) + dirs[0] + ", " + to_string((int)abs(cameraLon)) + dirs[1]),
+
+        DrawableText("Rules:"),
+        DrawableText(survivalText),
+        DrawableText(spawnText),
+        DrawableText("- State: " + to_string(STATE))
+    };
+
+    int lenTexts = sizeof(dts) / sizeof(dts[0]);
+
+    DrawRectangle(10, 10, 270, lenTexts * 14 + 7, Fade(SKYBLUE, 0.5f));
+    DrawRectangleLines(10, 10, 270, lenTexts * 14 + 7, BLUE);
+
+    for (int i = 0; i < lenTexts; i++) {
+        dts[i].draw(i);
     }
 }
 
@@ -348,70 +418,7 @@ int main(void) {
                 drawAndSyncCells(cells, toSync, drawBounds);
             EndMode3D();
 
-            char dirs[2] = { 'N', 'W' };
-            if (cameraLat < 0) {
-                dirs[0] = 'S';
-            }
-            if (cameraLon < 0) {
-                dirs[1] = 'E';
-            }
-            string survivalText = "- Survive:";
-            for (int value : SURVIVAL) {
-                survivalText += " " + to_string(value);
-            }
-            string spawnText = "- Spawn:";
-            for (int value : SPAWN) {
-                spawnText += " " + to_string(value);
-            }
-            // const char* fpsText = ("- FPS: " + to_string((int)(1.0f/delta))).c_str();
-            // const char* cameraText = ("- Camera pos: " + to_string((int)abs(cameraLat)) + dirs[0] + ", " + to_string((int)abs(cameraLon)) + dirs[1]).c_str();
-            // const char* texts[] = {
-            //     "Controls:",
-            //     "- Q/E to zoom in/out",
-            //     "- W/S to rotate camera up/down",
-            //     "- A/D to rotate camera left/right",
-            //     "- R to randomize cells",
-            //     "- X/Z to increase/decrease tick speed",
-            //     "- Mouse click to pause/unpause",
-            //     "- Space to reset camera",
-            //     "Simulation Info:",
-            //     fpsText,
-            //     ("- Ticks per sec: " + to_string(updateSpeed)).c_str(),
-            //     ("- Bound size: " + to_string(CELL_BOUNDS)).c_str(),
-            //     cameraText,
-
-            // };
-            // int lenTexts = sizeof(texts) / sizeof(texts[0]);
-
-            DrawRectangle( 10, 10, 270, 20 * 20 + 10, Fade(SKYBLUE, 0.5f));
-            DrawRectangleLines( 10, 10, 270, 20 * 20 + 10, BLUE);
-
-            // for (int i = 0; i < lenTexts; i++) {
-            //     DrawText(texts[i], 20, 20 + i * 20, 10, DARKGRAY);
-            // }
-
-            DrawText("Controls:", 20, 20, 10, BLACK);
-            DrawText("- Q/E to zoom in/out", 40, 40, 10, DARKGRAY);
-            DrawText("- W/S to rotate camera up/down", 40, 60, 10, DARKGRAY);
-            DrawText("- A/D to rotate camera left/right", 40, 80, 10, DARKGRAY);
-            DrawText("- X/Z to increase/decrease tick speed", 40, 100, 10, DARKGRAY);
-            DrawText("- Mouse click to pause/unpause", 40, 120, 10, DARKGRAY);
-            DrawText("- R to re-randomize cells", 40, 140, 10, DARKGRAY);
-            DrawText("- B to show/hide bounds", 40, 160, 10, DARKGRAY);
-            DrawText("- Space to reset camera", 40, 180, 10, DARKGRAY);
-            DrawText("- Enter to toggle fullscreen", 40, 200, 10, DARKGRAY);
-
-            DrawText(((string)"Simulation Info: " + (string)(paused ? "paused" : "running")).c_str(), 20, 220, 10, BLACK);
-            DrawText(("- FPS: " + to_string(GetFPS())).c_str(), 40, 240, 10, DARKGRAY);
-            DrawText(("- Ticks per sec: " + to_string(updateSpeed)).c_str(), 40, 260, 10, DARKGRAY);
-            DrawText(("- Bound size: " + to_string(CELL_BOUNDS)).c_str(), 40, 280, 10, DARKGRAY);
-            DrawText(("- Camera pos: " + to_string((int)abs(cameraLat)) + dirs[0] + ", " + to_string((int)abs(cameraLon)) + dirs[1]).c_str(), 40, 300, 10, DARKGRAY);
-
-            DrawText("Rules:", 20, 320, 10, BLACK);
-            DrawText(survivalText.c_str(), 40, 340, 10, DARKGRAY);
-            DrawText(spawnText.c_str(), 40, 360, 10, DARKGRAY);
-            DrawText(("- State: " + to_string(STATE)).c_str(), 40, 380, 10, DARKGRAY);
-            DrawText(("- Neighborhoods: " + textFromEnum(NEIGHBORHOODS)).c_str(), 40, 400, 10, DARKGRAY);
+            drawLeftBar(cameraLat, cameraLon, paused, updateSpeed);
 
         EndDrawing();
     }
