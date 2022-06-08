@@ -5,6 +5,7 @@
     - How to actucally get patterns?
 
 - Fullscreen is rather "janky" feeling when it goes into fullscreen mode
+- Pause -> cross section
 
 - Improve speed -> cell bounds = 100
     - Optimize: HOW?

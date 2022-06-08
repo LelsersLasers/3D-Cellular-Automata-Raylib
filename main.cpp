@@ -9,8 +9,8 @@ using namespace std;
 #define PI 3.14159265358979323846
 
 #define CELL_SIZE 1.0f
-#define CELL_BOUNDS 60
-#define aliveChanceOnSpawn 0.3f
+#define CELL_BOUNDS 50
+#define aliveChanceOnSpawn 0.15f
 
 
 /*
@@ -36,10 +36,10 @@ enum NeighborType {
 bool SURVIVAL[27];
 bool SPAWN[27];
 
-int survival_numbers[] = { 4 };
-int spawn_numbers[] = { 4 };
+int survival_numbers[] = { 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 };
+int spawn_numbers[] = { 5, 6, 7, 12, 13, 15 };
 
-const int STATE = 5;
+const int STATE = 6;
 const NeighborType NEIGHBORHOODS = MOORE;
 
 
@@ -89,20 +89,35 @@ class Cell {
 private:
     State state;
     Vector3 pos;
-    int hp = STATE;
+    Vector3 index;
+    int hp;
     int neighbors = 0;
 public:
-    Cell(Vector3 pos) {
-        this->pos = pos;
+    Cell(Vector3 index) {
+        this->index = index;
+        pos = (Vector3){
+            CELL_SIZE * (index.x - (CELL_BOUNDS - 1.0f) / 2.0f),
+            CELL_SIZE * (index.y - (CELL_BOUNDS - 1.0f) / 2.0f),
+            CELL_SIZE * (index.z - (CELL_BOUNDS - 1.0f) / 2.0f)
+        };
         randomizeState();
     }
     void clearNeighbors() { neighbors = 0; }
-    
     void addNeighbor(State neighborState) { neighbors += neighborState == ALIVE ? 1 : 0; }
     State getState() const { return state; }
     void randomizeState() {
-        state = (double)rand() / (double)RAND_MAX < aliveChanceOnSpawn ? ALIVE : DEAD;
-        hp = STATE;
+        if (index.x > CELL_BOUNDS/3.0f && index.x < CELL_BOUNDS * 2.0f/3.0f &&
+            index.y > CELL_BOUNDS/3.0f && index.y < CELL_BOUNDS * 2.0f/3.0f &&
+            index.z > CELL_BOUNDS/3.0f && index.z < CELL_BOUNDS * 2.0f/3.0f) { // only middle has spawn chance
+
+            state = (double)rand() / (double)RAND_MAX < aliveChanceOnSpawn ? ALIVE : DEAD;
+            if (state == ALIVE) hp = STATE;
+            else hp = 0;
+        }
+        else {
+            state = DEAD;
+            hp = 0;
+        }
         neighbors = 0;
     }
     void sync() {
@@ -133,8 +148,8 @@ public:
                 unsigned char brightness = (int)(percent * 255.0f);
                 color = (Color){ brightness, brightness, brightness, 255 };
             }
-            // unsigned char brightness = (int)((((float)this->hp)/STATE) * 255.0f);
-            // Color color = (Color){ 0, brightness, 0, 255 };
+            // unsigned char brightness = (int)((2.0f/(float)(STATE + 2) + ((float)this->hp)/(float)(STATE + 2)) * 255.0f );
+            // Color color = (Color){ brightness, 20, 20, 255 };
             DrawCube(this->pos, CELL_SIZE, CELL_SIZE, CELL_SIZE, color);
         }
     }
@@ -356,11 +371,7 @@ int main(void) {
         for (int y = 0; y < CELL_BOUNDS; y++) {
             cells[x].push_back(vector<Cell>());
             for (int z = 0; z < CELL_BOUNDS; z++) {
-                cells[x][y].push_back(Cell((Vector3){
-                    CELL_SIZE * (x - (CELL_BOUNDS - 1.0f) / 2.0f),
-                    CELL_SIZE * (y - (CELL_BOUNDS - 1.0f) / 2.0f),
-                    CELL_SIZE * (z - (CELL_BOUNDS - 1.0f) / 2.0f)
-                }));
+                cells[x][y].push_back(Cell({ (float)x, (float)y, (float)z }));
             }
         }
     }
