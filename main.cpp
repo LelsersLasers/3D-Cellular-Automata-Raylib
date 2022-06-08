@@ -145,10 +145,17 @@ string textFromEnum(NeighborType nt) {
     return "";
 }
 
+bool validCellIndex(Vector3 idx, Vector3 offset) {
+    return idx.x + offset.x >= 0 && idx.x + offset.x < CELL_BOUNDS &&
+           idx.y + offset.y >= 0 && idx.y + offset.y < CELL_BOUNDS &&
+           idx.z + offset.z >= 0 && idx.z + offset.z < CELL_BOUNDS;
+}
+
 void updateCells(vector<vector<vector<Cell>>> &cells) {
     for (int x = 0; x < CELL_BOUNDS; x++) {
         for (int y = 0; y < CELL_BOUNDS; y++) {
             for (int z = 0; z < CELL_BOUNDS; z++) {
+                Vector3 idx = { x, y, z };
                 cells[x][y][z].clearNeighbors();
                 if (NEIGHBORHOODS == MOORE) {
                     int offset_options[] = { -1, 0, 1 };
@@ -156,9 +163,7 @@ void updateCells(vector<vector<vector<Cell>>> &cells) {
                         for (int j = 0; j < 3; j++) {
                             for (int k = 0; k < 3; k++) {
                                 if (!(i == 0 && j == 0 && k == 0) &&
-                                    x + offset_options[i] >= 0 && x + offset_options[i] < CELL_BOUNDS &&
-                                    y + offset_options[j] >= 0 && y + offset_options[j] < CELL_BOUNDS &&
-                                    z + offset_options[k] >= 0 && z + offset_options[k] < CELL_BOUNDS) {
+                                    validCellIndex(idx, { (float)offset_options[i], (float)offset_options[j], (float)offset_options[k] })) {
                                     cells[x][y][z].addNeighbor(cells[x + offset_options[i]][y + offset_options[j]][z + offset_options[k]].getState());
                                 }
                             }
@@ -166,7 +171,7 @@ void updateCells(vector<vector<vector<Cell>>> &cells) {
                     }
                 }
                 else if (NEIGHBORHOODS == VON_NEUMANN) {
-                    int offsets[6][3] = {
+                    Vector3 offsets[6] = {
                         { 1, 0, 0 },
                         { -1, 0, 0 },
                         { 0, 1, 0 },
@@ -175,10 +180,8 @@ void updateCells(vector<vector<vector<Cell>>> &cells) {
                         { 0, 0, -1 }
                     };
                     for (auto offset : offsets) {
-                        if (x + offset[0] >= 0 && x + offset[0] < CELL_BOUNDS &&
-                            y + offset[1] >= 0 && y + offset[1] < CELL_BOUNDS &&
-                            z + offset[2] >= 0 && z + offset[2] < CELL_BOUNDS) {
-                            cells[x][y][z].addNeighbor(cells[x + offset[0]][y + offset[1]][z + offset[2]].getState());
+                        if (validCellIndex(idx, offset)) {
+                            cells[x][y][z].addNeighbor(cells[x + offset.x][y + offset.y][z + offset.z].getState());
                         }
                     }
                 }
@@ -398,7 +401,7 @@ int main(void) {
             DrawText("- Space to reset camera", 40, 180, 10, DARKGRAY);
             DrawText("- Enter to toggle fullscreen", 40, 200, 10, DARKGRAY);
 
-            DrawText("Simulation Info:", 20, 220, 10, BLACK);
+            DrawText(((string)"Simulation Info: " + (string)(paused ? "paused" : "running")).c_str(), 20, 220, 10, BLACK);
             DrawText(("- FPS: " + to_string(GetFPS())).c_str(), 40, 240, 10, DARKGRAY);
             DrawText(("- Ticks per sec: " + to_string(updateSpeed)).c_str(), 40, 260, 10, DARKGRAY);
             DrawText(("- Bound size: " + to_string(CELL_BOUNDS)).c_str(), 40, 280, 10, DARKGRAY);
