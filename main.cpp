@@ -32,6 +32,18 @@ enum NeighborType {
     VON_NEUMANN
 };
 
+enum State {
+    ALIVE,
+    DEAD,
+    DYING
+};
+
+enum DrawMode {
+    DUAL_COLOR = 0,
+    DUAL_COLOR_DYING = 1,
+    SINGLE_COLOR = 2
+};
+
 
 bool SURVIVAL[27];
 bool SPAWN[27];
@@ -42,11 +54,12 @@ int spawn_numbers[] = { 5, 6, 7, 12, 13, 15 };
 const int STATE = 6;
 const NeighborType NEIGHBORHOODS = MOORE;
 
-
-enum State {
-    ALIVE,
-    DEAD,
-    DYING
+const Color C1 = GREEN;
+const Color C2 = RED;
+const Vector3 COLOR_OFFSET = {
+    ((float)C1.r - C2.r)/STATE,
+    ((float)C1.g - C2.g)/STATE,
+    ((float)C1.b - C2.b)/STATE,
 };
 
 
@@ -92,6 +105,7 @@ private:
     Vector3 index;
     int hp;
     int neighbors = 0;
+    void draw(Color color) const { DrawCube(this->pos, CELL_SIZE, CELL_SIZE, CELL_SIZE, color); }
 public:
     Cell(Vector3 index) {
         this->index = index;
@@ -139,8 +153,26 @@ public:
             }
         }
     }
-
-    void draw() const {
+    void drawSingleColor() const {
+        if (this->state != DEAD) {
+            float x = 3.0f;
+            float base = x/(STATE + x);
+            float percent = (float)this->hp/(STATE + x);
+            unsigned char brightness = (int)((base + percent) * 255.0f);
+            draw((Color){ brightness, 20, 20, 255 });
+        }
+    }
+    void drawDualColor() const {
+        if (this->state != DEAD) {
+            draw((Color){
+                (unsigned char)(C2.r + COLOR_OFFSET.x * (float)this->hp),
+                (unsigned char)(C2.g + COLOR_OFFSET.y * (float)this->hp),
+                (unsigned char)(C2.b + COLOR_OFFSET.z * (float)this->hp),
+                255
+            });
+        }
+    }
+    void drawDualColorDying() const {
         if (this->state != DEAD) {
             Color color = RED;
             if (this->state == DYING) {
@@ -148,9 +180,7 @@ public:
                 unsigned char brightness = (int)(percent * 255.0f);
                 color = (Color){ brightness, brightness, brightness, 255 };
             }
-            // unsigned char brightness = (int)((2.0f/(float)(STATE + 2) + ((float)this->hp)/(float)(STATE + 2)) * 255.0f );
-            // Color color = (Color){ brightness, 20, 20, 255 };
-            DrawCube(this->pos, CELL_SIZE, CELL_SIZE, CELL_SIZE, color);
+            draw(color);
         }
     }
 };
@@ -233,30 +263,80 @@ void updateCells(vector<vector<vector<Cell>>> &cells) {
 }
 
 
-void drawAndSyncCells(vector<vector<vector<Cell>>> &cells, int divisor) {
-    for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
-        for (int y = 0; y < CELL_BOUNDS; y++) {
-            for (int z = 0; z < CELL_BOUNDS; z++) {
-                cells[x][y][z].sync();
-                cells[x][y][z].draw();
+void drawAndSyncCells(vector<vector<vector<Cell>>> &cells, int divisor, DrawMode drawMode) {
+    // A bit exessive to put this outside, but is saves doing CELL_BOUNDS^3 extra checks
+    // at the cost of extra code
+    switch (drawMode) {
+        case SINGLE_COLOR:
+            for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
+                for (int y = 0; y < CELL_BOUNDS; y++) {
+                    for (int z = 0; z < CELL_BOUNDS; z++) {
+                        cells[x][y][z].sync();
+                        cells[x][y][z].drawSingleColor();
+                    }
+                }
             }
-        }
+            break;
+        case DUAL_COLOR:
+            for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
+                for (int y = 0; y < CELL_BOUNDS; y++) {
+                    for (int z = 0; z < CELL_BOUNDS; z++) {
+                        cells[x][y][z].sync();
+                        cells[x][y][z].drawDualColor();
+                    }
+                }
+            }
+            break;
+        case DUAL_COLOR_DYING:
+            for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
+                for (int y = 0; y < CELL_BOUNDS; y++) {
+                    for (int z = 0; z < CELL_BOUNDS; z++) {
+                        cells[x][y][z].sync();
+                        cells[x][y][z].drawDualColorDying();
+                    }
+                }
+            }
+            break;
     }
 }
 
-void basicDrawCells(const vector<vector<vector<Cell>>> &cells, int divisor) {
-    for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
-        for (int y = 0; y < CELL_BOUNDS; y++) {
-            for (int z = 0; z < CELL_BOUNDS; z++) {
-                cells[x][y][z].draw();
+void basicDrawCells(const vector<vector<vector<Cell>>> &cells, int divisor, DrawMode drawMode) {
+    // A bit exessive to put this outside, but is saves doing CELL_BOUNDS^3 extra checks
+    // at the cost of extra code
+    switch (drawMode) {
+        case SINGLE_COLOR:
+            for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
+                for (int y = 0; y < CELL_BOUNDS; y++) {
+                    for (int z = 0; z < CELL_BOUNDS; z++) {
+                        cells[x][y][z].drawSingleColor();
+                    }
+                }
             }
-        }
+            break;
+        case DUAL_COLOR:
+            for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
+                for (int y = 0; y < CELL_BOUNDS; y++) {
+                    for (int z = 0; z < CELL_BOUNDS; z++) {
+                        cells[x][y][z].drawDualColor();
+                    }
+                }
+            }
+            break;
+        case DUAL_COLOR_DYING:
+            for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
+                for (int y = 0; y < CELL_BOUNDS; y++) {
+                    for (int z = 0; z < CELL_BOUNDS; z++) {
+                        cells[x][y][z].drawDualColorDying();
+                    }
+                }
+            }
+            break;
     }
 }
 
-void drawCells(vector<vector<vector<Cell>>> &cells, bool toSync, bool drawBounds, bool showHalf) {
-    if (toSync) drawAndSyncCells(cells, (int)showHalf + 1);
-    else basicDrawCells(cells, (int)showHalf + 1);
+void drawCells(vector<vector<vector<Cell>>> &cells, bool toSync, bool drawBounds, bool showHalf, DrawMode drawMode) {
+    if (toSync) drawAndSyncCells(cells, (int)showHalf + 1, drawMode);
+    else basicDrawCells(cells, (int)showHalf + 1, drawMode);
 
     if (drawBounds) {
         int outlineSize = CELL_SIZE * CELL_BOUNDS;
@@ -301,6 +381,7 @@ void drawLeftBar(float cameraLat, float cameraLon, bool paused, int updateSpeed)
         DrawableText("- X/Z to increase/decrease tick speed"),
         DrawableText("- Mouse click to pause/unpause"),
         DrawableText("- R to re-randomize cells"),
+        DrawableText("- M to change between draw modes"),
         DrawableText("- B to show/hide bounds"),
         DrawableText("- C to toggle cross section view"),
         DrawableText("- Space to reset camera"),
@@ -358,6 +439,7 @@ int main(void) {
     bool paused = false;
     bool drawBounds = true;
     bool showHalf = false;
+    DrawMode drawMode = DUAL_COLOR;
 
     ToggleKey mouseTK;
     ToggleKey enterTK;
@@ -365,6 +447,7 @@ int main(void) {
     ToggleKey zTK;
     ToggleKey bTK;
     ToggleKey cTK;
+    ToggleKey mTK;
 
     int updateSpeed = 8;
     float frame = 0;
@@ -401,6 +484,7 @@ int main(void) {
             if (updateSpeed > 1) updateSpeed--;
         }
         if (cTK.down(IsKeyDown('C'))) showHalf = !showHalf;
+        if (mTK.down(IsKeyDown('M'))) drawMode = (DrawMode)((drawMode + 1) % 3);
         if (IsKeyDown(KEY_SPACE)) {
             cameraLat = 20.0f;
             cameraLon = 20.0f;
@@ -439,7 +523,7 @@ int main(void) {
             ClearBackground(RAYWHITE);
 
             BeginMode3D(camera);
-                drawCells(cells, toSync, drawBounds, showHalf);
+                drawCells(cells, toSync, drawBounds, showHalf, drawMode);
             EndMode3D();
 
             drawLeftBar(cameraLat, cameraLon, paused, updateSpeed);

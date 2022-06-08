@@ -8,6 +8,7 @@
 - Dynamic update speed option?
     - Set target fps, if fps > target fps, increase update speed, if fps < target fps, decrease update speed
     - given room for 'error' (aka within 5 of target fps is fine)
+    - manual, fastest, dynamic
 
 - Improve speed -> cell bounds = 100
     - Optimize: HOW?
@@ -22,5 +23,5 @@
     - 'f' on floats? when float, when int?
     - when is casting needed, when is it exessive?
 
-- On demand changes for bound, cell rules, (color, etc)
+- On demand changes for bound, cell rules, (colors, etc)
 - Menu screens etc?
