@@ -3,8 +3,6 @@
 - Improve speed -> cell bounds = 100
     - Optimize: HOW?
         - (https://www.reddit.com/r/learnprogramming/comments/v7yn13/optimization_questions_about_c_and_cellular/)
-    - Is VECTOR slower than arrays/other methods?
-        - Replace 3d vector with 1d vector
     - Things to try:
         - Calc on GPU?
         - Branchless programming?

@@ -39,7 +39,7 @@ enum State {
 };
 
 enum DrawMode {
-    DUAL_COLOR_1 = 0,
+    DUAL_COLOR = 0,
     RGB_CUBE = 1,
     DUAL_COLOR_DYING = 2,
     SINGLE_COLOR = 3,
@@ -152,8 +152,8 @@ public:
     void randomizeState() {
         if (index.x > CELL_BOUNDS/3.0f && index.x < CELL_BOUNDS * 2.0f/3.0f &&
             index.y > CELL_BOUNDS/3.0f && index.y < CELL_BOUNDS * 2.0f/3.0f &&
-            index.z > CELL_BOUNDS/3.0f && index.z < CELL_BOUNDS * 2.0f/3.0f) { // only middle has spawn chance
-
+            index.z > CELL_BOUNDS/3.0f && index.z < CELL_BOUNDS * 2.0f/3.0
+        ) { // only middle has spawn chance
             state = (double)rand() / (double)RAND_MAX < aliveChanceOnSpawn ? ALIVE : DEAD;
             if (state == ALIVE) hp = STATE;
             else hp = 0;
@@ -180,7 +180,7 @@ public:
                 break;
         }
     }
-    void drawDualColor1() const {
+    void drawDualColor() const {
         if (state != DEAD) {
             draw((Color){
                 (unsigned char)(C2.r + COLOR_OFFSET1.x * (float)hp),
@@ -247,6 +247,11 @@ float degreesToRadians(float degrees) {
     return degrees * PI / 180.0f;
 }
 
+int threeToOne(int x, int y, int z) {
+    return x * CELL_BOUNDS * CELL_BOUNDS + y * CELL_BOUNDS  + z;
+}
+
+
 string textFromEnum(NeighborType nt) {
     switch (nt) {
         case MOORE: return "Moore";
@@ -256,7 +261,7 @@ string textFromEnum(NeighborType nt) {
 }
 string textFromEnum(DrawMode dm) {
     switch (dm) {
-        case DUAL_COLOR_1: return "Dual Color 1";
+        case DUAL_COLOR: return "Dual Color";
         case DUAL_COLOR_DYING: return "Dual Color Dying";
         case SINGLE_COLOR: return "Single Color";
         case RGB_CUBE: return "RGB";
@@ -280,17 +285,18 @@ bool validCellIndex(int x, int y, int z, int a, int b, int c) {
            z + c >= 0 && z + c < CELL_BOUNDS;
 }
 
-void updateNeighborsMoore(vector<vector<vector<Cell>>> &cells) {
+void updateNeighborsMoore(vector<Cell> &cells) {
     const int offset_options[] = { -1, 0, 1 };
     for (int x = 0; x < CELL_BOUNDS; x++) {
         for (int y = 0; y < CELL_BOUNDS; y++) {
             for (int z = 0; z < CELL_BOUNDS; z++) {
-                cells[x][y][z].clearNeighbors();
+                cells[threeToOne(x, y, z)].clearNeighbors();
                 for (int a : offset_options) {
                     for (int b : offset_options) {
                         for (int c : offset_options) {
                             if (!(a == 0 && b == 0 && c == 0) && validCellIndex(x, y, z, a, b, c)) {
-                                cells[x][y][z].addNeighbor(cells[x + a][y + b][z + c].getState());
+                                cells[threeToOne(x, y, z)]
+                                    .addNeighbor(cells[threeToOne(x + a, y + b, z + c)].getState());
                             }
                         }
                     }
@@ -300,7 +306,7 @@ void updateNeighborsMoore(vector<vector<vector<Cell>>> &cells) {
     }
 }
 
-void updateNeighborsVonNeumann(vector<vector<vector<Cell>>> &cells) {
+void updateNeighborsVonNeumann(vector<Cell> &cells) {
     const Vector3 offsets[6] = {
         { 1, 0, 0 },
         { -1, 0, 0 },
@@ -312,10 +318,12 @@ void updateNeighborsVonNeumann(vector<vector<vector<Cell>>> &cells) {
     for (int x = 0; x < CELL_BOUNDS; x++) {
         for (int y = 0; y < CELL_BOUNDS; y++) {
             for (int z = 0; z < CELL_BOUNDS; z++) {
-                cells[x][y][z].clearNeighbors();
+                cells[threeToOne(x, y, z)].clearNeighbors();
                 for (Vector3 offset : offsets) {
                     if (validCellIndex(x, y, z, offset.x, offset.y, offset.z)) {
-                        cells[x][y][z].addNeighbor(cells[x + offset.x][y + offset.y][z + offset.z].getState());
+                        cells[threeToOne(x, y, z)]
+                            .addNeighbor(cells[threeToOne(x + offset.x, y + offset.y, z + offset.z)]
+                                .getState());
                     }
                 }
             }
@@ -323,22 +331,22 @@ void updateNeighborsVonNeumann(vector<vector<vector<Cell>>> &cells) {
     }
 }
 
-void updateCells(vector<vector<vector<Cell>>> &cells) {
+void updateCells(vector<Cell> &cells) {
     if (NEIGHBORHOODS == MOORE) updateNeighborsMoore(cells);
     else updateNeighborsVonNeumann(cells);
 }
 
 
-void drawAndSyncCells(vector<vector<vector<Cell>>> &cells, int divisor, DrawMode drawMode) {
+void drawAndSyncCells(vector<Cell> &cells, int divisor, DrawMode drawMode) {
     // A bit exessive to put this outside, but is saves doing CELL_BOUNDS^3 extra checks
     // at the cost of extra code
     switch (drawMode) {
-        case DUAL_COLOR_1:
+        case DUAL_COLOR:
             for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
                 for (int y = 0; y < CELL_BOUNDS; y++) {
                     for (int z = 0; z < CELL_BOUNDS; z++) {
-                        cells[x][y][z].sync();
-                        cells[x][y][z].drawDualColor1();
+                        cells[threeToOne(x, y, z)].sync();
+                        cells[threeToOne(x, y, z)].drawDualColor();
                     }
                 }
             }
@@ -347,8 +355,8 @@ void drawAndSyncCells(vector<vector<vector<Cell>>> &cells, int divisor, DrawMode
             for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
                 for (int y = 0; y < CELL_BOUNDS; y++) {
                     for (int z = 0; z < CELL_BOUNDS; z++) {
-                        cells[x][y][z].sync();
-                        cells[x][y][z].drawDualColorDying();
+                        cells[threeToOne(x, y, z)].sync();
+                        cells[threeToOne(x, y, z)].drawDualColorDying();
                     }
                 }
             }
@@ -357,8 +365,8 @@ void drawAndSyncCells(vector<vector<vector<Cell>>> &cells, int divisor, DrawMode
             for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
                 for (int y = 0; y < CELL_BOUNDS; y++) {
                     for (int z = 0; z < CELL_BOUNDS; z++) {
-                        cells[x][y][z].sync();
-                        cells[x][y][z].drawSingleColor();
+                        cells[threeToOne(x, y, z)].sync();
+                        cells[threeToOne(x, y, z)].drawSingleColor();
                     }
                 }
             }
@@ -367,8 +375,8 @@ void drawAndSyncCells(vector<vector<vector<Cell>>> &cells, int divisor, DrawMode
             for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
                 for (int y = 0; y < CELL_BOUNDS; y++) {
                     for (int z = 0; z < CELL_BOUNDS; z++) {
-                        cells[x][y][z].sync();
-                        cells[x][y][z].drawRGBCube();
+                        cells[threeToOne(x, y, z)].sync();
+                        cells[threeToOne(x, y, z)].drawRGBCube();
                     }
                 }
             }
@@ -377,8 +385,8 @@ void drawAndSyncCells(vector<vector<vector<Cell>>> &cells, int divisor, DrawMode
             for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
                 for (int y = 0; y < CELL_BOUNDS; y++) {
                     for (int z = 0; z < CELL_BOUNDS; z++) {
-                        cells[x][y][z].sync();
-                        cells[x][y][z].drawDist();
+                        cells[threeToOne(x, y, z)].sync();
+                        cells[threeToOne(x, y, z)].drawDist();
                     }
                 }
             }
@@ -387,21 +395,21 @@ void drawAndSyncCells(vector<vector<vector<Cell>>> &cells, int divisor, DrawMode
     for (int x = CELL_BOUNDS/divisor; x < CELL_BOUNDS; x++) { // still sync second half
         for (int y = 0; y < CELL_BOUNDS; y++) {
             for (int z = 0; z < CELL_BOUNDS; z++) {
-                cells[x][y][z].sync();
+                cells[threeToOne(x, y, z)].sync();
             }
         }
     }
 }
 
-void basicDrawCells(const vector<vector<vector<Cell>>> &cells, int divisor, DrawMode drawMode) {
+void basicDrawCells(const vector<Cell> &cells, int divisor, DrawMode drawMode) {
     // A bit exessive to put this outside, but is saves doing CELL_BOUNDS^3 extra checks
     // at the cost of extra code
     switch (drawMode) {
-        case DUAL_COLOR_1:
+        case DUAL_COLOR:
             for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
                 for (int y = 0; y < CELL_BOUNDS; y++) {
                     for (int z = 0; z < CELL_BOUNDS; z++) {
-                        cells[x][y][z].drawDualColor1();
+                        cells[threeToOne(x, y, z)].drawDualColor();
                     }
                 }
             }
@@ -410,7 +418,7 @@ void basicDrawCells(const vector<vector<vector<Cell>>> &cells, int divisor, Draw
             for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
                 for (int y = 0; y < CELL_BOUNDS; y++) {
                     for (int z = 0; z < CELL_BOUNDS; z++) {
-                        cells[x][y][z].drawDualColorDying();
+                        cells[threeToOne(x, y, z)].drawDualColorDying();
                     }
                 }
             }
@@ -419,7 +427,7 @@ void basicDrawCells(const vector<vector<vector<Cell>>> &cells, int divisor, Draw
             for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
                 for (int y = 0; y < CELL_BOUNDS; y++) {
                     for (int z = 0; z < CELL_BOUNDS; z++) {
-                        cells[x][y][z].drawSingleColor();
+                        cells[threeToOne(x, y, z)].drawSingleColor();
                     }
                 }
             }
@@ -428,7 +436,7 @@ void basicDrawCells(const vector<vector<vector<Cell>>> &cells, int divisor, Draw
             for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
                 for (int y = 0; y < CELL_BOUNDS; y++) {
                     for (int z = 0; z < CELL_BOUNDS; z++) {
-                        cells[x][y][z].drawRGBCube();
+                        cells[threeToOne(x, y, z)].drawRGBCube();
                     }
                 }
             }
@@ -437,7 +445,7 @@ void basicDrawCells(const vector<vector<vector<Cell>>> &cells, int divisor, Draw
             for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
                 for (int y = 0; y < CELL_BOUNDS; y++) {
                     for (int z = 0; z < CELL_BOUNDS; z++) {
-                        cells[x][y][z].drawDist();
+                        cells[threeToOne(x, y, z)].drawDist();
                     }
                 }
             }
@@ -445,7 +453,7 @@ void basicDrawCells(const vector<vector<vector<Cell>>> &cells, int divisor, Draw
     }
 }
 
-void drawCells(vector<vector<vector<Cell>>> &cells, bool toSync, bool drawBounds, bool showHalf, DrawMode drawMode) {
+void drawCells(vector<Cell> &cells, bool toSync, bool drawBounds, bool showHalf, DrawMode drawMode) {
     if (toSync) drawAndSyncCells(cells, (int)showHalf + 1, drawMode);
     else basicDrawCells(cells, (int)showHalf + 1, drawMode);
 
@@ -457,13 +465,9 @@ void drawCells(vector<vector<vector<Cell>>> &cells, bool toSync, bool drawBounds
 }
 
 
-void randomizeCells(vector<vector<vector<Cell>>> &cells) {
-    for (int x = 0; x < CELL_BOUNDS; x++) {
-        for (int y = 0; y < CELL_BOUNDS; y++) {
-            for (int z = 0; z < CELL_BOUNDS; z++) {
-                cells[x][y][z].randomizeState();
-            }
-        }
+void randomizeCells(vector<Cell> &cells) {
+    for (int i = 0; i < CELL_BOUNDS * CELL_BOUNDS * CELL_BOUNDS; i++) {
+        cells[i].randomizeState();
     }
 }
 
@@ -550,7 +554,7 @@ int main(void) {
     bool paused = false;
     bool drawBounds = true;
     bool showHalf = false;
-    DrawMode drawMode = DUAL_COLOR_1;
+    DrawMode drawMode = DUAL_COLOR;
     TickMode tickMode = MANUAL;
 
     ToggleKey mouseTK;
@@ -565,13 +569,11 @@ int main(void) {
     int updateSpeed = 8;
     float frame = 0;
 
-    vector<vector<vector<Cell>>> cells;
+    vector<Cell> cells;
     for (int x = 0; x < CELL_BOUNDS; x++) {
-        cells.push_back(vector<vector<Cell>>());
         for (int y = 0; y < CELL_BOUNDS; y++) {
-            cells[x].push_back(vector<Cell>());
             for (int z = 0; z < CELL_BOUNDS; z++) {
-                cells[x][y].push_back(Cell({ (float)x, (float)y, (float)z }));
+                cells.push_back(Cell({ (float)x, (float)y, (float)z }));
             }
         }
     }
