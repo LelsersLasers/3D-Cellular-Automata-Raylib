@@ -32,8 +32,13 @@ enum NeighborType {
     VON_NEUMANN
 };
 
-const bool SURVIVAL[27] = { false, false, false, false, true, false }; // { 4 }
-const bool SPAWN[27] =    { false, false, false, false, true, false }; // { 4 }
+
+bool SURVIVAL[27];
+bool SPAWN[27];
+
+int survival_numbers[] = { 4 };
+int spawn_numbers[] = { 4 };
+
 const int STATE = 5;
 const NeighborType NEIGHBORHOODS = MOORE;
 
@@ -135,6 +140,15 @@ public:
     }
 };
 
+
+void setupBoolArrays() {
+    for (int value : survival_numbers) {
+        SURVIVAL[value] = true;
+    }
+    for (int value : spawn_numbers) {
+        SPAWN[value] = true;
+    }
+}
 
 float degreesToRadians(float degrees) {
     return degrees * PI / 180.0f;
@@ -308,6 +322,8 @@ int main(void) {
 
     InitWindow(screenWidth, screenHeight, "3D Cellular Automata with Raylib");
     SetWindowState(FLAG_WINDOW_RESIZABLE);
+
+    setupBoolArrays();
 
     Camera3D camera = { 0 };
     camera.position = (Vector3){ 10.0f, 10.0f, 10.0f }; // Camera position
