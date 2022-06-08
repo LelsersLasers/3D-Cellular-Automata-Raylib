@@ -1,12 +1,5 @@
 # TODO
 
-- The actual 3d cellular automata
-    - Does it work?
-    - How to actucally get patterns?
-
-- Fullscreen is rather "janky" feeling when it goes into fullscreen mode
-    - Change to borderless fullscreen? Or even bordered?
-
 - Improve speed -> cell bounds = 100
     - Optimize: HOW?
         - Re creating const per frame in drawLeftBar, etc?

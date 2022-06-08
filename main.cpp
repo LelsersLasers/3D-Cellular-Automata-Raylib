@@ -54,10 +54,16 @@ enum TickMode {
 bool SURVIVAL[27];
 bool SPAWN[27];
 
-int survival_numbers[] = { 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 };
-int spawn_numbers[] = { 5, 6, 7, 12, 13, 15 };
+// My rules 9-18/5-7,12-13,15/6/M
+// const int survival_numbers[] = { 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 };
+// const int spawn_numbers[] = { 5, 6, 7, 12, 13, 15 };
+// const int STATE = 6;
+// const NeighborType NEIGHBORHOODS = MOORE;
 
-const int STATE = 6;
+// Builder 1 (Jason Rampe) 2,6,9/4,6,8-9/10/M
+const int survival_numbers[] = { 2, 6, 9 };
+const int spawn_numbers[] = { 4, 6, 8, 9 };
+const int STATE = 10;
 const NeighborType NEIGHBORHOODS = MOORE;
 
 const Color C1 = GREEN;
@@ -416,7 +422,7 @@ void drawLeftBar(bool drawBounds, bool showHalf, bool paused, DrawMode drawMode,
 
         DrawableText("Simulation Info:"),
         DrawableText("- FPS: " + to_string(GetFPS())),
-        DrawableText("- Ticks per sec: " + to_string(updateSpeed)),
+        DrawableText("- Ticks per sec: " + to_string(tickMode == FAST ? GetFPS() : updateSpeed)),
         DrawableText("- Bound size: " + to_string(CELL_BOUNDS)),
         DrawableText("- Camera pos: " + to_string((int)abs(cameraLat)) + dirs[0] + ", " + to_string(abs((int)cameraLon)) + dirs[1]),
 
@@ -451,11 +457,11 @@ int main(void) {
     setupBoolArrays();
 
     Camera3D camera = { 0 };
-    camera.position = (Vector3){ 10.0f, 10.0f, 10.0f }; // Camera position
-    camera.target = (Vector3){ 0.0f, 0.0f, 0.0f };      // Camera looking at point
-    camera.up = (Vector3){ 0.0f, 0.0f, 1.0f };          // Camera up vector (rotation towards target)
-    camera.fovy = 60.0f;                                // Camera field-of-view Y
-    camera.projection = CAMERA_PERSPECTIVE;             // Camera mode type
+    camera.position = (Vector3){ 10.0f, 10.0f, 10.0f };
+    camera.target = (Vector3){ 0.0f, 0.0f, 0.0f };
+    camera.up = (Vector3){ 0.0f, 0.0f, 1.0f };
+    camera.fovy = 60.0f;
+    camera.projection = CAMERA_PERSPECTIVE;
 
     float cameraLat = 20.0f;
     float cameraLon = 20.0f;
@@ -518,12 +524,8 @@ int main(void) {
             cameraRadius = 2.0f * CELL_SIZE * CELL_BOUNDS;
         }
         if (enterTK.down(IsKeyPressed(KEY_ENTER))) {
-            ToggleFullscreen();
-            if (IsWindowFullscreen()) {
-                int display = GetCurrentMonitor();
-                SetWindowSize(GetMonitorWidth(display), GetMonitorHeight(display));
-            }
-            else SetWindowSize(screenWidth, screenHeight);
+            if (GetScreenWidth() == screenWidth) MaximizeWindow();
+            else RestoreWindow();
         }
 
         if (cameraLat > 90) cameraLat = 89.99f;
