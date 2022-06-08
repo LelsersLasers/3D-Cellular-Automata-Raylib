@@ -252,7 +252,6 @@ void drawLeftBar(float cameraLat, float cameraLon, bool paused, int updateSpeed)
         (cameraLat > 0 ? 'N' : 'S'),
         (cameraLon > 0 ? 'W' : 'E')
     };
-    int outputLon = abs((int)cameraLon % 360);
 
     string survivalText = "- Survive:";
     for (int i = 0; i < 27; i++) {
@@ -280,7 +279,7 @@ void drawLeftBar(float cameraLat, float cameraLon, bool paused, int updateSpeed)
         DrawableText("- FPS: " + to_string(GetFPS())),
         DrawableText("- Ticks per sec: " + to_string(updateSpeed)),
         DrawableText("- Bound size: " + to_string(CELL_BOUNDS)),
-        DrawableText("- Camera pos: " + to_string((int)abs(cameraLat)) + dirs[0] + ", " + to_string(outputLon) + dirs[1]),
+        DrawableText("- Camera pos: " + to_string((int)abs(cameraLat)) + dirs[0] + ", " + to_string(abs((int)cameraLon)) + dirs[1]),
 
         DrawableText("Rules:"),
         DrawableText(survivalText),
@@ -386,6 +385,9 @@ int main(void) {
 
         if (cameraLat > 90) cameraLat = 89.99f;
         else if (cameraLat < -90) cameraLat = -89.99f;
+        if (cameraLon > 180) cameraLon -= 360;
+        else if (cameraLon < -180) cameraLon += 360;
+
         if (cameraRadius < CELL_SIZE) cameraRadius = CELL_SIZE;
         camera.position = (Vector3){
             cameraRadius * cos(degreesToRadians(cameraLat)) * cos(degreesToRadians(cameraLon)),

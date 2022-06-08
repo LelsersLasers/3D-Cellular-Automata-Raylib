@@ -5,7 +5,6 @@
     - How to actucally get patterns?
 
 - Fullscreen is rather "janky" feeling when it goes into fullscreen mode
-- Improve longitute "wrap" in left bar for camera pos
 
 - Improve speed -> cell bounds = 100
     - Optimize: HOW?
@@ -15,6 +14,10 @@
     - Is VECTOR slower than arrays/other methods?
         - Am I passing it wrong?
     - Multithreading?
+
+- Cleaning:
+    - 'f' on floats? when float, when int?
+    - when is casting needed, when is it exessive?
 
 - On demand changes for bound, cell rules, (color, etc)
 - Menu screens etc?
