@@ -32,8 +32,8 @@ enum NeighborType {
     VON_NEUMANN
 };
 
-bool SURVIVAL[27] = { false, false, false, false, true, false };
-bool SPAWN[27] =    { false, false, false, false, true, false };
+bool SURVIVAL[27] = { false, false, false, false, true, false }; // {} 4 }
+bool SPAWN[27] =    { false, false, false, false, true, false }; // { 4 }
 int STATE = 5;
 NeighborType NEIGHBORHOODS = MOORE;
 
@@ -131,12 +131,6 @@ public:
             DrawCube(this->pos, CELL_SIZE, CELL_SIZE, CELL_SIZE, color);
         }
     }
-    // void draw(Color color) const {
-    //     this->draw();
-    //     if (this->state != DEAD) {
-    //         DrawCubeWires(this->pos, CELL_SIZE, CELL_SIZE, CELL_SIZE, color);
-    //     }
-    // }
 
 };
 
