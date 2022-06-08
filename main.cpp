@@ -233,8 +233,8 @@ void updateCells(vector<vector<vector<Cell>>> &cells) {
 }
 
 
-void drawAndSyncCells(vector<vector<vector<Cell>>> &cells) {
-    for (int x = 0; x < CELL_BOUNDS; x++) {
+void drawAndSyncCells(vector<vector<vector<Cell>>> &cells, int divisor) {
+    for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
         for (int y = 0; y < CELL_BOUNDS; y++) {
             for (int z = 0; z < CELL_BOUNDS; z++) {
                 cells[x][y][z].sync();
@@ -244,8 +244,8 @@ void drawAndSyncCells(vector<vector<vector<Cell>>> &cells) {
     }
 }
 
-void basicDrawCells(const vector<vector<vector<Cell>>> &cells) {
-    for (int x = 0; x < CELL_BOUNDS; x++) {
+void basicDrawCells(const vector<vector<vector<Cell>>> &cells, int divisor) {
+    for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
         for (int y = 0; y < CELL_BOUNDS; y++) {
             for (int z = 0; z < CELL_BOUNDS; z++) {
                 cells[x][y][z].draw();
@@ -254,13 +254,14 @@ void basicDrawCells(const vector<vector<vector<Cell>>> &cells) {
     }
 }
 
-void drawCells(vector<vector<vector<Cell>>> &cells, bool toSync, bool drawBounds) {
-    if (toSync) drawAndSyncCells(cells);
-    else basicDrawCells(cells);
+void drawCells(vector<vector<vector<Cell>>> &cells, bool toSync, bool drawBounds, bool showHalf) {
+    if (toSync) drawAndSyncCells(cells, (int)showHalf + 1);
+    else basicDrawCells(cells, (int)showHalf + 1);
 
     if (drawBounds) {
         int outlineSize = CELL_SIZE * CELL_BOUNDS;
-        DrawCubeWires((Vector3){ 0, 0, 0 }, outlineSize, outlineSize, outlineSize, BLUE);
+        if (showHalf) DrawCubeWires((Vector3){ (float)-outlineSize/4.0f, 0, 0 }, outlineSize/2, outlineSize, outlineSize, BLUE);
+        else DrawCubeWires((Vector3){ 0, 0, 0 }, outlineSize, outlineSize, outlineSize, BLUE);
     }
 }
 
@@ -301,6 +302,7 @@ void drawLeftBar(float cameraLat, float cameraLon, bool paused, int updateSpeed)
         DrawableText("- Mouse click to pause/unpause"),
         DrawableText("- R to re-randomize cells"),
         DrawableText("- B to show/hide bounds"),
+        DrawableText("- C to toggle cross section view"),
         DrawableText("- Space to reset camera"),
         DrawableText("- Enter to toggle fullscreen"),
 
@@ -355,12 +357,14 @@ int main(void) {
 
     bool paused = false;
     bool drawBounds = true;
+    bool showHalf = false;
 
     ToggleKey mouseTK;
     ToggleKey enterTK;
     ToggleKey xTK;
     ToggleKey zTK;
     ToggleKey bTK;
+    ToggleKey cTK;
 
     int updateSpeed = 8;
     float frame = 0;
@@ -396,6 +400,7 @@ int main(void) {
         if (zTK.down(IsKeyDown('Z'))) {
             if (updateSpeed > 1) updateSpeed--;
         }
+        if (cTK.down(IsKeyDown('C'))) showHalf = !showHalf;
         if (IsKeyDown(KEY_SPACE)) {
             cameraLat = 20.0f;
             cameraLon = 20.0f;
@@ -434,7 +439,7 @@ int main(void) {
             ClearBackground(RAYWHITE);
 
             BeginMode3D(camera);
-                drawCells(cells, toSync, drawBounds);
+                drawCells(cells, toSync, drawBounds, showHalf);
             EndMode3D();
 
             drawLeftBar(cameraLat, cameraLon, paused, updateSpeed);

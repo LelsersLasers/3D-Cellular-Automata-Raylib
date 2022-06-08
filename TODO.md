@@ -5,7 +5,9 @@
     - How to actucally get patterns?
 
 - Fullscreen is rather "janky" feeling when it goes into fullscreen mode
-- Pause -> cross section
+- Dynamic update speed option?
+    - Set target fps, if fps > target fps, increase update speed, if fps < target fps, decrease update speed
+    - given room for 'error' (aka within 5 of target fps is fine)
 
 - Improve speed -> cell bounds = 100
     - Optimize: HOW?
