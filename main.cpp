@@ -9,7 +9,7 @@ using namespace std;
 #define PI 3.14159265358979323846
 
 #define CELL_SIZE 1.0f
-#define CELL_BOUNDS 100
+#define CELL_BOUNDS 66
 #define aliveChanceOnSpawn 0.15f
 
 
@@ -42,7 +42,8 @@ enum DrawMode {
     DUAL_COLOR_1 = 0,
     DUAL_COLOR_DYING = 1,
     SINGLE_COLOR = 2,
-    DUAL_COLOR_2 = 3
+    RGB_CUBE = 3,
+    CENTER_DIST = 4
 };
 
 enum TickMode {
@@ -123,6 +124,9 @@ public:
     }
 };
 
+float calc_distance(Vector3 a, Vector3 b) {
+    return sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2) + pow(a.z - b.z, 2));
+}
 
 class Cell {
 private:
@@ -206,14 +210,25 @@ public:
             draw((Color){ brightness, 20, 20, 255 });
         }
     }
-    void drawDualColor2() const {
+    void drawRGBCube() const {
         if (state != DEAD) {
             draw((Color){
-                (unsigned char)(C4.r + COLOR_OFFSET2.x * (float)hp),
-                (unsigned char)(C4.g + COLOR_OFFSET2.y * (float)hp),
-                (unsigned char)(C4.b + COLOR_OFFSET2.z * (float)hp),
+                (unsigned char)(index.x/CELL_BOUNDS * 255.0f),
+                (unsigned char)(index.y/CELL_BOUNDS * 255.0f),
+                (unsigned char)(index.z/CELL_BOUNDS * 255.0f),
                 255
             });
+        }
+    }
+    void drawDist() const {
+        if (state != DEAD) {
+            float x = 3.0f;
+            float cap = CELL_BOUNDS/2.0f;
+            float dist = calc_distance(index, { cap, cap, cap });
+            float base = x/(cap * sqrt(3.0f) + x);
+            float percent = dist/(cap * sqrt(3.0f) + x);
+            unsigned char brightness = (int)((base + percent) * 255.0f);
+            draw((Color){ brightness, brightness, brightness, 255 });
         }
     }
 };
@@ -244,7 +259,8 @@ string textFromEnum(DrawMode dm) {
         case DUAL_COLOR_1: return "Dual Color 1";
         case DUAL_COLOR_DYING: return "Dual Color Dying";
         case SINGLE_COLOR: return "Single Color";
-        case DUAL_COLOR_2: return "Dual Color 2";
+        case RGB_CUBE: return "RGB";
+        case CENTER_DIST: return "Center Dist";
     }
     return "";
 }
@@ -347,12 +363,22 @@ void drawAndSyncCells(vector<vector<vector<Cell>>> &cells, int divisor, DrawMode
                 }
             }
             break;
-        case DUAL_COLOR_2:
+        case RGB_CUBE:
             for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
                 for (int y = 0; y < CELL_BOUNDS; y++) {
                     for (int z = 0; z < CELL_BOUNDS; z++) {
                         cells[x][y][z].sync();
-                        cells[x][y][z].drawDualColor2();
+                        cells[x][y][z].drawRGBCube();
+                    }
+                }
+            }
+            break;
+        case CENTER_DIST:
+            for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
+                for (int y = 0; y < CELL_BOUNDS; y++) {
+                    for (int z = 0; z < CELL_BOUNDS; z++) {
+                        cells[x][y][z].sync();
+                        cells[x][y][z].drawDist();
                     }
                 }
             }
@@ -391,11 +417,20 @@ void basicDrawCells(const vector<vector<vector<Cell>>> &cells, int divisor, Draw
                 }
             }
             break;
-        case DUAL_COLOR_2:
+        case RGB_CUBE:
             for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
                 for (int y = 0; y < CELL_BOUNDS; y++) {
                     for (int z = 0; z < CELL_BOUNDS; z++) {
-                        cells[x][y][z].drawDualColor2();
+                        cells[x][y][z].drawRGBCube();
+                    }
+                }
+            }
+            break;
+        case CENTER_DIST:
+            for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
+                for (int y = 0; y < CELL_BOUNDS; y++) {
+                    for (int z = 0; z < CELL_BOUNDS; z++) {
+                        cells[x][y][z].drawDist();
                     }
                 }
             }
@@ -552,7 +587,7 @@ int main(void) {
         if (xTK.down(IsKeyDown('X') && tickMode == MANUAL)) updateSpeed++;
         if (zTK.down(IsKeyDown('Z') && tickMode == MANUAL && updateSpeed > 1)) updateSpeed--;
         if (cTK.down(IsKeyDown('C'))) showHalf = !showHalf;
-        if (mTK.down(IsKeyDown('M'))) drawMode = (DrawMode)((drawMode + 1) % 4);
+        if (mTK.down(IsKeyDown('M'))) drawMode = (DrawMode)((drawMode + 1) % 5);
         if (uTK.down(IsKeyDown('U'))) tickMode = (TickMode)((tickMode + 1) % 3);;
         if (IsKeyDown(KEY_SPACE)) {
             cameraLat = 20.0f;
