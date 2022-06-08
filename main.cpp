@@ -39,9 +39,10 @@ enum State {
 };
 
 enum DrawMode {
-    DUAL_COLOR = 0,
+    DUAL_COLOR_1 = 0,
     DUAL_COLOR_DYING = 1,
-    SINGLE_COLOR = 2
+    SINGLE_COLOR = 2,
+    DUAL_COLOR_2 = 3
 };
 
 enum TickMode {
@@ -68,10 +69,18 @@ const NeighborType NEIGHBORHOODS = MOORE;
 
 const Color C1 = GREEN;
 const Color C2 = RED;
-const Vector3 COLOR_OFFSET = {
+const Vector3 COLOR_OFFSET1 = {
     ((float)C1.r - C2.r)/STATE,
     ((float)C1.g - C2.g)/STATE,
     ((float)C1.b - C2.b)/STATE,
+};
+
+const Color C3 = BLACK;
+const Color C4 = LIGHTGRAY;
+const Vector3 COLOR_OFFSET2 = {
+    ((float)C3.r - C4.r)/STATE,
+    ((float)C3.g - C4.g)/STATE,
+    ((float)C3.b - C4.b)/STATE,
 };
 
 const int TargetFPS = 20;
@@ -170,21 +179,12 @@ public:
             }
         }
     }
-    void drawSingleColor() const {
-        if (this->state != DEAD) {
-            float x = 3.0f;
-            float base = x/(STATE + x);
-            float percent = (float)this->hp/(STATE + x);
-            unsigned char brightness = (int)((base + percent) * 255.0f);
-            draw((Color){ brightness, 20, 20, 255 });
-        }
-    }
-    void drawDualColor() const {
+    void drawDualColor1() const {
         if (this->state != DEAD) {
             draw((Color){
-                (unsigned char)(C2.r + COLOR_OFFSET.x * (float)this->hp),
-                (unsigned char)(C2.g + COLOR_OFFSET.y * (float)this->hp),
-                (unsigned char)(C2.b + COLOR_OFFSET.z * (float)this->hp),
+                (unsigned char)(C2.r + COLOR_OFFSET1.x * (float)this->hp),
+                (unsigned char)(C2.g + COLOR_OFFSET1.y * (float)this->hp),
+                (unsigned char)(C2.b + COLOR_OFFSET1.z * (float)this->hp),
                 255
             });
         }
@@ -198,6 +198,25 @@ public:
                 color = (Color){ brightness, brightness, brightness, 255 };
             }
             draw(color);
+        }
+    }
+    void drawSingleColor() const {
+        if (this->state != DEAD) {
+            float x = 3.0f;
+            float base = x/(STATE + x);
+            float percent = (float)this->hp/(STATE + x);
+            unsigned char brightness = (int)((base + percent) * 255.0f);
+            draw((Color){ brightness, 20, 20, 255 });
+        }
+    }
+    void drawDualColor2() const {
+        if (this->state != DEAD) {
+            draw((Color){
+                (unsigned char)(C4.r + COLOR_OFFSET2.x * (float)this->hp),
+                (unsigned char)(C4.g + COLOR_OFFSET2.y * (float)this->hp),
+                (unsigned char)(C4.b + COLOR_OFFSET2.z * (float)this->hp),
+                255
+            });
         }
     }
 };
@@ -225,9 +244,10 @@ string textFromEnum(NeighborType nt) {
 }
 string textFromEnum(DrawMode dm) {
     switch (dm) {
-        case DUAL_COLOR: return "Dual Color";
+        case DUAL_COLOR_1: return "Dual Color 1";
         case DUAL_COLOR_DYING: return "Dual Color Dying";
         case SINGLE_COLOR: return "Single Color";
+        case DUAL_COLOR_2: return "Dual Color 2";
     }
     return "";
 }
@@ -300,22 +320,12 @@ void drawAndSyncCells(vector<vector<vector<Cell>>> &cells, int divisor, DrawMode
     // A bit exessive to put this outside, but is saves doing CELL_BOUNDS^3 extra checks
     // at the cost of extra code
     switch (drawMode) {
-        case SINGLE_COLOR:
+        case DUAL_COLOR_1:
             for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
                 for (int y = 0; y < CELL_BOUNDS; y++) {
                     for (int z = 0; z < CELL_BOUNDS; z++) {
                         cells[x][y][z].sync();
-                        cells[x][y][z].drawSingleColor();
-                    }
-                }
-            }
-            break;
-        case DUAL_COLOR:
-            for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
-                for (int y = 0; y < CELL_BOUNDS; y++) {
-                    for (int z = 0; z < CELL_BOUNDS; z++) {
-                        cells[x][y][z].sync();
-                        cells[x][y][z].drawDualColor();
+                        cells[x][y][z].drawDualColor1();
                     }
                 }
             }
@@ -326,6 +336,26 @@ void drawAndSyncCells(vector<vector<vector<Cell>>> &cells, int divisor, DrawMode
                     for (int z = 0; z < CELL_BOUNDS; z++) {
                         cells[x][y][z].sync();
                         cells[x][y][z].drawDualColorDying();
+                    }
+                }
+            }
+            break;
+        case SINGLE_COLOR:
+            for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
+                for (int y = 0; y < CELL_BOUNDS; y++) {
+                    for (int z = 0; z < CELL_BOUNDS; z++) {
+                        cells[x][y][z].sync();
+                        cells[x][y][z].drawSingleColor();
+                    }
+                }
+            }
+            break;
+        case DUAL_COLOR_2:
+            for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
+                for (int y = 0; y < CELL_BOUNDS; y++) {
+                    for (int z = 0; z < CELL_BOUNDS; z++) {
+                        cells[x][y][z].sync();
+                        cells[x][y][z].drawDualColor2();
                     }
                 }
             }
@@ -337,20 +367,11 @@ void basicDrawCells(const vector<vector<vector<Cell>>> &cells, int divisor, Draw
     // A bit exessive to put this outside, but is saves doing CELL_BOUNDS^3 extra checks
     // at the cost of extra code
     switch (drawMode) {
-        case SINGLE_COLOR:
+        case DUAL_COLOR_1:
             for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
                 for (int y = 0; y < CELL_BOUNDS; y++) {
                     for (int z = 0; z < CELL_BOUNDS; z++) {
-                        cells[x][y][z].drawSingleColor();
-                    }
-                }
-            }
-            break;
-        case DUAL_COLOR:
-            for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
-                for (int y = 0; y < CELL_BOUNDS; y++) {
-                    for (int z = 0; z < CELL_BOUNDS; z++) {
-                        cells[x][y][z].drawDualColor();
+                        cells[x][y][z].drawDualColor1();
                     }
                 }
             }
@@ -360,6 +381,24 @@ void basicDrawCells(const vector<vector<vector<Cell>>> &cells, int divisor, Draw
                 for (int y = 0; y < CELL_BOUNDS; y++) {
                     for (int z = 0; z < CELL_BOUNDS; z++) {
                         cells[x][y][z].drawDualColorDying();
+                    }
+                }
+            }
+            break;
+        case SINGLE_COLOR:
+            for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
+                for (int y = 0; y < CELL_BOUNDS; y++) {
+                    for (int z = 0; z < CELL_BOUNDS; z++) {
+                        cells[x][y][z].drawSingleColor();
+                    }
+                }
+            }
+            break;
+        case DUAL_COLOR_2:
+            for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
+                for (int y = 0; y < CELL_BOUNDS; y++) {
+                    for (int z = 0; z < CELL_BOUNDS; z++) {
+                        cells[x][y][z].drawDualColor2();
                     }
                 }
             }
@@ -472,7 +511,7 @@ int main(void) {
     bool paused = false;
     bool drawBounds = true;
     bool showHalf = false;
-    DrawMode drawMode = DUAL_COLOR;
+    DrawMode drawMode = DUAL_COLOR_1;
     TickMode tickMode = MANUAL;
 
     ToggleKey mouseTK;
@@ -516,7 +555,7 @@ int main(void) {
         if (xTK.down(IsKeyDown('X') && tickMode == MANUAL)) updateSpeed++;
         if (zTK.down(IsKeyDown('Z') && tickMode == MANUAL && updateSpeed > 1)) updateSpeed--;
         if (cTK.down(IsKeyDown('C'))) showHalf = !showHalf;
-        if (mTK.down(IsKeyDown('M'))) drawMode = (DrawMode)((drawMode + 1) % 3);
+        if (mTK.down(IsKeyDown('M'))) drawMode = (DrawMode)((drawMode + 1) % 4);
         if (uTK.down(IsKeyDown('U'))) tickMode = (TickMode)((tickMode + 1) % 3);;
         if (IsKeyDown(KEY_SPACE)) {
             cameraLat = 20.0f;
