@@ -32,8 +32,8 @@ enum NeighborType {
     VON_NEUMANN
 };
 
-int SURVIVAL[] = { 4 };
-int SPAWN[] = { 4 };
+bool SURVIVAL[27] = { false, false, false, false, true, false };
+bool SPAWN[27] =    { false, false, false, false, true, false };
 int STATE = 5;
 NeighborType NEIGHBORHOODS = MOORE;
 
@@ -103,29 +103,18 @@ public:
     void sync() {
         switch (state) {
             case ALIVE: {
-                bool willDie = true;
-                for (int value : SURVIVAL) {
-                    if (neighbors == value) {
-                        willDie = false;
-                        break;
-                    }
-                }
-                if (willDie) state = DYING;
+                if (!SURVIVAL[neighbors]) state = DYING;
                 break;
             }
             case DEAD: {
-                for (int value : SPAWN) {
-                    if (neighbors == value) {
-                        state = ALIVE;
-                        hp = STATE;
-                        break;
-                    }
+                if (SPAWN[neighbors]) {
+                    state = ALIVE;
+                    hp = STATE;
                 }
                 break;
             }
             case DYING: {
-                hp--;
-                if (hp == 0) state = DEAD;
+                if (--hp == 0) state = DEAD;
                 break;
             }
         }
@@ -243,12 +232,13 @@ void drawLeftBar(float cameraLat, float cameraLon, bool paused, int updateSpeed)
         dirs[1] = 'E';
     }
     string survivalText = "- Survive:";
-    for (int value : SURVIVAL) {
-        survivalText += " " + to_string(value);
+    for (int i = 0; i < 27; i++) {
+        if (SURVIVAL[i]) survivalText += " " + to_string(i);
     }
+
     string spawnText = "- Spawn:";
-    for (int value : SPAWN) {
-        spawnText += " " + to_string(value);
+    for (int i = 0; i < 27; i++) {
+        if (SPAWN[i]) spawnText += " " + to_string(i);
     }
 
     DrawableText dts[] = {
