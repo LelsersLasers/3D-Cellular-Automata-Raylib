@@ -2,12 +2,15 @@
 
 - The actual 3d cellular automata
     - Does it work?
+    - How to actucally get patterns?
 
 - Fullscreen is rather "janky" feeling when it goes into fullscreen mode
+- Improve longitute "wrap" in left bar for camera pos
 
 - Improve speed -> cell bounds = 100
     - Optimize: HOW?
-        - Re creating const array per cell in updateCells, drawLeftBar, etc?
+        - Re creating const per frame in drawLeftBar, etc?
+        - Re creating non const per frame with delta, etc?
         - Extra if statements per cell in updateCells, or draw+sync Cells
     - Is VECTOR slower than arrays/other methods?
         - Am I passing it wrong?
