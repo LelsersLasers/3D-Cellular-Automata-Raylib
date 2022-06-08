@@ -9,7 +9,7 @@ using namespace std;
 #define PI 3.14159265358979323846
 
 #define CELL_SIZE 1.0f
-#define CELL_BOUNDS 66
+#define CELL_BOUNDS 100
 #define aliveChanceOnSpawn 0.15f
 
 
@@ -131,7 +131,7 @@ private:
     Vector3 index;
     int hp;
     int neighbors = 0;
-    void draw(Color color) const { DrawCube(this->pos, CELL_SIZE, CELL_SIZE, CELL_SIZE, color); }
+    void draw(Color color) const { DrawCube(pos, CELL_SIZE, CELL_SIZE, CELL_SIZE, color); }
 public:
     Cell(Vector3 index) {
         this->index = index;
@@ -162,38 +162,35 @@ public:
     }
     void sync() {
         switch (state) {
-            case ALIVE: {
+            case ALIVE:
                 if (!SURVIVAL[neighbors]) state = DYING;
                 break;
-            }
-            case DEAD: {
+            case DEAD:
                 if (SPAWN[neighbors]) {
                     state = ALIVE;
                     hp = STATE;
                 }
                 break;
-            }
-            case DYING: {
+            case DYING:
                 if (--hp == 0) state = DEAD;
                 break;
-            }
         }
     }
     void drawDualColor1() const {
-        if (this->state != DEAD) {
+        if (state != DEAD) {
             draw((Color){
-                (unsigned char)(C2.r + COLOR_OFFSET1.x * (float)this->hp),
-                (unsigned char)(C2.g + COLOR_OFFSET1.y * (float)this->hp),
-                (unsigned char)(C2.b + COLOR_OFFSET1.z * (float)this->hp),
+                (unsigned char)(C2.r + COLOR_OFFSET1.x * (float)hp),
+                (unsigned char)(C2.g + COLOR_OFFSET1.y * (float)hp),
+                (unsigned char)(C2.b + COLOR_OFFSET1.z * (float)hp),
                 255
             });
         }
     }
     void drawDualColorDying() const {
-        if (this->state != DEAD) {
+        if (state != DEAD) {
             Color color = RED;
-            if (this->state == DYING) {
-                float percent = (1 + (float)this->hp)/(STATE + 2);
+            if (state == DYING) {
+                float percent = (1 + (float)hp)/(STATE + 2);
                 unsigned char brightness = (int)(percent * 255.0f);
                 color = (Color){ brightness, brightness, brightness, 255 };
             }
@@ -201,20 +198,20 @@ public:
         }
     }
     void drawSingleColor() const {
-        if (this->state != DEAD) {
+        if (state != DEAD) {
             float x = 3.0f;
             float base = x/(STATE + x);
-            float percent = (float)this->hp/(STATE + x);
+            float percent = (float)hp/(STATE + x);
             unsigned char brightness = (int)((base + percent) * 255.0f);
             draw((Color){ brightness, 20, 20, 255 });
         }
     }
     void drawDualColor2() const {
-        if (this->state != DEAD) {
+        if (state != DEAD) {
             draw((Color){
-                (unsigned char)(C4.r + COLOR_OFFSET2.x * (float)this->hp),
-                (unsigned char)(C4.g + COLOR_OFFSET2.y * (float)this->hp),
-                (unsigned char)(C4.b + COLOR_OFFSET2.z * (float)this->hp),
+                (unsigned char)(C4.r + COLOR_OFFSET2.x * (float)hp),
+                (unsigned char)(C4.g + COLOR_OFFSET2.y * (float)hp),
+                (unsigned char)(C4.b + COLOR_OFFSET2.z * (float)hp),
                 255
             });
         }
@@ -506,7 +503,7 @@ int main(void) {
     float cameraLon = 20.0f;
     float cameraRadius = 1.75f * CELL_SIZE * CELL_BOUNDS;
     const float cameraMoveSpeed = 180.0f/4.0f;
-    const float cameraZoomSpeed = 12.0f;
+    const float cameraZoomSpeed = CELL_SIZE * CELL_BOUNDS/10.0f;
 
     bool paused = false;
     bool drawBounds = true;

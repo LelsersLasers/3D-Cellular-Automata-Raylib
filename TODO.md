@@ -9,6 +9,11 @@
         - Am I passing it wrong?
     - Multithreading?
 
+- Coloring:
+    - RGB Cube
+    - Dist from center = color
+    - Remove 2nd dual color draw
+
 - Cleaning:
     - 'f' on floats? when float, when int?
     - when is casting needed, when is it exessive?
