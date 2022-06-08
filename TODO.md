@@ -6,8 +6,6 @@
 
 - Fullscreen is rather "janky" feeling when it goes into fullscreen mode
     - Change to borderless fullscreen? Or even bordered?
-- Dynamic update speed option
-    - save manual tick setting, and revert to that then it is switched back to it
 
 - Improve speed -> cell bounds = 100
     - Optimize: HOW?

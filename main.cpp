@@ -95,13 +95,16 @@ public:
         this->text = text;
     }
     void draw(int i) const {
-        int x = 40;
+        int x = 30;
         Color color = DARKGRAY;
         if (text[0] != '-') {
             x = 20;
             color = BLACK;
         }
         DrawText(text.c_str(), x, (i + 1) * 14, 10, color);
+    }
+    int length() const {
+        return text.length();
     }
 };
 
@@ -211,6 +214,22 @@ string textFromEnum(NeighborType nt) {
     switch (nt) {
         case MOORE: return "Moore";
         case VON_NEUMANN: return "von Neumann";
+    }
+    return "";
+}
+string textFromEnum(DrawMode dm) {
+    switch (dm) {
+        case DUAL_COLOR: return "Dual Color";
+        case DUAL_COLOR_DYING: return "Dual Color Dying";
+        case SINGLE_COLOR: return "Single Color";
+    }
+    return "";
+}
+string textFromEnum(TickMode tm) {
+    switch (tm) {
+        case MANUAL: return "Manual";
+        case FAST: return "Fastest";
+        case DYNAMIC: return "Dynamic";
     }
     return "";
 }
@@ -365,7 +384,7 @@ void randomizeCells(vector<vector<vector<Cell>>> &cells) {
 }
 
 
-void drawLeftBar(float cameraLat, float cameraLon, bool paused, int updateSpeed) {
+void drawLeftBar(bool drawBounds, bool showHalf, bool paused, DrawMode drawMode, TickMode tickMode, float cameraLat, float cameraLon, int updateSpeed) {
     char dirs[2] = {
         (cameraLat > 0 ? 'N' : 'S'),
         (cameraLon > 0 ? 'W' : 'E')
@@ -382,22 +401,20 @@ void drawLeftBar(float cameraLat, float cameraLon, bool paused, int updateSpeed)
     }
 
     const DrawableText dts[] = {
-        // TODO: print current status of toggles
         DrawableText("Controls:"),
-        DrawableText("- Q/E to zoom in/out"),
-        DrawableText("- W/S to rotate camera up/down"),
-        DrawableText("- A/D to rotate camera left/right"),
-        DrawableText("- X/Z to increase/decrease tick speed"),
-        DrawableText("- Mouse click to pause/unpause"),
-        DrawableText("- R to re-randomize cells"),
-        DrawableText("- M to change between draw modes"),
-        DrawableText("- B to show/hide bounds"),
-        DrawableText("- C to toggle cross section view"),
-        DrawableText("- U to change between tick modes"),
-        DrawableText("- Space to reset camera"),
-        DrawableText("- Enter to toggle fullscreen"),
+        DrawableText("- Q/E : zoom in/out"),
+        DrawableText("- W/S : rotate camera up/down"),
+        DrawableText("- A/D : rotate camera left/right"),
+        DrawableText("- R : re-randomize cells"),
+        DrawableText("- B : show/hide bounds " + (string)(drawBounds ? "(on)" : "(off)")),
+        DrawableText("- C : toggle cross section view " + (string)(showHalf ? "(on)" : "(off)")),
+        DrawableText("- Mouse click : pause/unpause " + (string)(paused ? "(paused)" : "(running)")),
+        DrawableText("- Space : reset camera"),
+        DrawableText("- Enter : toggle fullscreen"),
+        DrawableText("- M : change between draw modes [" + textFromEnum(drawMode) + "]"),
+        DrawableText("- U : change between tick modes [" + textFromEnum(tickMode) + "]"),
 
-        DrawableText((string)"Simulation Info: " + (string)(paused ? "paused" : "running")),
+        DrawableText("Simulation Info:"),
         DrawableText("- FPS: " + to_string(GetFPS())),
         DrawableText("- Ticks per sec: " + to_string(updateSpeed)),
         DrawableText("- Bound size: " + to_string(CELL_BOUNDS)),
@@ -412,8 +429,8 @@ void drawLeftBar(float cameraLat, float cameraLon, bool paused, int updateSpeed)
 
     const int lenTexts = sizeof(dts) / sizeof(dts[0]);
 
-    DrawRectangle(10, 10, 270, lenTexts * 14 + 7, Fade(SKYBLUE, 0.5f));
-    DrawRectangleLines(10, 10, 270, lenTexts * 14 + 7, BLUE);
+    DrawRectangle(10, 10, 290, lenTexts * 14 + 7, Fade(SKYBLUE, 0.5f));
+    DrawRectangleLines(10, 10, 290, lenTexts * 14 + 7, BLUE);
 
     for (int i = 0; i < lenTexts; i++) {
         dts[i].draw(i);
@@ -474,7 +491,6 @@ int main(void) {
             }
         }
     }
-        
 
     // Main game loop
     while (!WindowShouldClose()) {
@@ -541,7 +557,7 @@ int main(void) {
                 drawCells(cells, toSync, drawBounds, showHalf, drawMode);
             EndMode3D();
 
-            drawLeftBar(cameraLat, cameraLon, paused, updateSpeed);
+            drawLeftBar(drawBounds, showHalf, paused, drawMode, tickMode, cameraLat, cameraLon, updateSpeed);
 
         EndDrawing();
     }
