@@ -279,50 +279,21 @@ string textFromEnum(TickMode tm) {
 }
 
 
-bool validCellIndex(int x, int y, int z, int a, int b, int c) {
-    return x + a >= 0 && x + a < CELL_BOUNDS &&
-           y + b >= 0 && y + b < CELL_BOUNDS &&
-           z + c >= 0 && z + c < CELL_BOUNDS;
+bool validCellIndex(int x, int y, int z, Vector3 offset) {
+    return x + offset.x >= 0 && x + offset.x < CELL_BOUNDS &&
+           y + offset.y >= 0 && y + offset.y < CELL_BOUNDS &&
+           z + offset.z >= 0 && z + offset.z < CELL_BOUNDS;
 }
 
-void updateNeighborsMoore(vector<Cell> &cells) {
-    const int offset_options[] = { -1, 0, 1 };
+void updateNeighbors(vector<Cell> &cells, const Vector3 offsets[], int totalOffsets) {
     for (int x = 0; x < CELL_BOUNDS; x++) {
         for (int y = 0; y < CELL_BOUNDS; y++) {
             for (int z = 0; z < CELL_BOUNDS; z++) {
                 cells[threeToOne(x, y, z)].clearNeighbors();
-                for (int a : offset_options) {
-                    for (int b : offset_options) {
-                        for (int c : offset_options) {
-                            if (!(a == 0 && b == 0 && c == 0) && validCellIndex(x, y, z, a, b, c)) {
-                                cells[threeToOne(x, y, z)]
-                                    .addNeighbor(cells[threeToOne(x + a, y + b, z + c)].getState());
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-void updateNeighborsVonNeumann(vector<Cell> &cells) {
-    const Vector3 offsets[6] = {
-        { 1, 0, 0 },
-        { -1, 0, 0 },
-        { 0, 1, 0 },
-        { 0, -1, 0 },
-        { 0, 0, 1 },
-        { 0, 0, -1 }
-    };
-    for (int x = 0; x < CELL_BOUNDS; x++) {
-        for (int y = 0; y < CELL_BOUNDS; y++) {
-            for (int z = 0; z < CELL_BOUNDS; z++) {
-                cells[threeToOne(x, y, z)].clearNeighbors();
-                for (Vector3 offset : offsets) {
-                    if (validCellIndex(x, y, z, offset.x, offset.y, offset.z)) {
+                for (int i = 0; i < totalOffsets; i++) {
+                    if (validCellIndex(x, y, z, offsets[i])) {
                         cells[threeToOne(x, y, z)]
-                            .addNeighbor(cells[threeToOne(x + offset.x, y + offset.y, z + offset.z)]
+                            .addNeighbor(cells[threeToOne(x + offsets[i].x, y + offsets[i].y, z + offsets[i].z)]
                                 .getState());
                     }
                 }
@@ -332,8 +303,48 @@ void updateNeighborsVonNeumann(vector<Cell> &cells) {
 }
 
 void updateCells(vector<Cell> &cells) {
-    if (NEIGHBORHOODS == MOORE) updateNeighborsMoore(cells);
-    else updateNeighborsVonNeumann(cells);
+    if (NEIGHBORHOODS == MOORE) {
+        const Vector3 offsets[26] = {
+            { -1, -1, -1 },
+            { -1, -1, 0 },
+            { -1, -1, 1 },
+            { -1, 0, -1 },
+            { -1, 0, 0 },
+            { -1, 0, 1 },
+            { -1, 1, -1 },
+            { -1, 1, 0 },
+            { -1, 1, 1 },
+            { 0, -1, -1 },
+            { 0, -1, 0 },
+            { 0, -1, 1 },
+            { 0, 0, -1 },
+            { 0, 0, 1 },
+            { 0, 1, -1 },
+            { 0, 1, 0 },
+            { 0, 1, 1 },
+            { 1, -1, -1 },
+            { 1, -1, 0 },
+            { 1, -1, 1 },
+            { 1, 0, -1 },
+            { 1, 0, 0 },
+            { 1, 0, 1 },
+            { 1, 1, -1 },
+            { 1, 1, 0 },
+            { 1, 1, 1 },
+        };
+        updateNeighbors(cells, offsets, 26);
+    }
+    else {
+        const Vector3 offsets[] = {
+            { 1, 0, 0 },
+            { -1, 0, 0 },
+            { 0, 1, 0 },
+            { 0, -1, 0 },
+            { 0, 0, 1 },
+            { 0, 0, -1 }
+        };
+        updateNeighbors(cells, offsets, 6);
+    }
 }
 
 
@@ -601,7 +612,7 @@ int main(void) {
         if (IsKeyDown(KEY_SPACE)) {
             cameraLat = 20.0f;
             cameraLon = 20.0f;
-            cameraRadius = 2.0f * CELL_SIZE * CELL_BOUNDS;
+            float cameraRadius = 1.75f * CELL_SIZE * CELL_BOUNDS;
         }
         if (enterTK.down(IsKeyPressed(KEY_ENTER))) {
             if (GetScreenWidth() == screenWidth) MaximizeWindow();
