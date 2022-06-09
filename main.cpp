@@ -6,7 +6,7 @@
 #include <iostream>
 using namespace std;
 
-#define PI 3.14159265358979323846
+#define PI 3.14159265358979323846f
 
 #define CELL_SIZE 1.0f
 #define CELL_BOUNDS 66
@@ -32,15 +32,10 @@ enum NeighborType {
     VON_NEUMANN
 };
 
-// enum State {
-//     ALIVE = 1,
-//     DEAD = 0,
-//     DYING = -1
-// };
 enum State {
-    ALIVE,
-    DEAD,
-    DYING
+    ALIVE = 2,
+    DEAD = 0,
+    DYING = 1
 };
 
 enum DrawMode {
@@ -152,7 +147,7 @@ public:
         randomizeState();
     }
     void clearNeighbors() { neighbors = 0; }
-    void addNeighbor(State neighborState) { neighbors += neighborState == ALIVE ? 1 : 0; }
+    void addNeighbor(int neighborState) { neighbors += neighborState/2; }
     State getState() const { return state; }
     void randomizeState() {
         if (index.x > CELL_BOUNDS/3.0f && index.x < CELL_BOUNDS * 2.0f/3.0f &&
