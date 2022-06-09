@@ -1,6 +1,6 @@
 # TODO
 
-- Custom struct Vector3Int
+- Custom typedef struct Vector3Int or just int idx[3] over Vector3 which uses floats
 
 - Improve speed -> cell bounds = 100
     - Optimize: HOW?

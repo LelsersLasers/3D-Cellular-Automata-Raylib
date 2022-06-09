@@ -32,6 +32,11 @@ enum NeighborType {
     VON_NEUMANN
 };
 
+// enum State {
+//     ALIVE = 1,
+//     DEAD = 0,
+//     DYING = -1
+// };
 enum State {
     ALIVE,
     DEAD,
@@ -279,7 +284,7 @@ string textFromEnum(TickMode tm) {
 }
 
 
-bool validCellIndex(int x, int y, int z, Vector3 offset) {
+bool validCellIndex(int x, int y, int z, const Vector3 &offset) {
     return x + offset.x >= 0 && x + offset.x < CELL_BOUNDS &&
            y + offset.y >= 0 && y + offset.y < CELL_BOUNDS &&
            z + offset.z >= 0 && z + offset.z < CELL_BOUNDS;
@@ -289,10 +294,11 @@ void updateNeighbors(vector<Cell> &cells, const Vector3 offsets[], int totalOffs
     for (int x = 0; x < CELL_BOUNDS; x++) {
         for (int y = 0; y < CELL_BOUNDS; y++) {
             for (int z = 0; z < CELL_BOUNDS; z++) {
-                cells[threeToOne(x, y, z)].clearNeighbors();
+                int oneIdx = threeToOne(x, y, z);
+                cells[oneIdx].clearNeighbors();
                 for (int i = 0; i < totalOffsets; i++) {
                     if (validCellIndex(x, y, z, offsets[i])) {
-                        cells[threeToOne(x, y, z)]
+                        cells[oneIdx]
                             .addNeighbor(cells[threeToOne(x + offsets[i].x, y + offsets[i].y, z + offsets[i].z)]
                                 .getState());
                     }
@@ -356,8 +362,9 @@ void drawAndSyncCells(vector<Cell> &cells, int divisor, DrawMode drawMode) {
             for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
                 for (int y = 0; y < CELL_BOUNDS; y++) {
                     for (int z = 0; z < CELL_BOUNDS; z++) {
-                        cells[threeToOne(x, y, z)].sync();
-                        cells[threeToOne(x, y, z)].drawDualColor();
+                        int oneIdx = threeToOne(x, y, z);
+                        cells[oneIdx].sync();
+                        cells[oneIdx].drawDualColor();
                     }
                 }
             }
@@ -366,8 +373,9 @@ void drawAndSyncCells(vector<Cell> &cells, int divisor, DrawMode drawMode) {
             for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
                 for (int y = 0; y < CELL_BOUNDS; y++) {
                     for (int z = 0; z < CELL_BOUNDS; z++) {
-                        cells[threeToOne(x, y, z)].sync();
-                        cells[threeToOne(x, y, z)].drawDualColorDying();
+                        int oneIdx = threeToOne(x, y, z);
+                        cells[oneIdx].sync();
+                        cells[oneIdx].drawDualColorDying();
                     }
                 }
             }
@@ -376,8 +384,9 @@ void drawAndSyncCells(vector<Cell> &cells, int divisor, DrawMode drawMode) {
             for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
                 for (int y = 0; y < CELL_BOUNDS; y++) {
                     for (int z = 0; z < CELL_BOUNDS; z++) {
-                        cells[threeToOne(x, y, z)].sync();
-                        cells[threeToOne(x, y, z)].drawSingleColor();
+                        int oneIdx = threeToOne(x, y, z);
+                        cells[oneIdx].sync();
+                        cells[oneIdx].drawSingleColor();
                     }
                 }
             }
@@ -386,8 +395,9 @@ void drawAndSyncCells(vector<Cell> &cells, int divisor, DrawMode drawMode) {
             for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
                 for (int y = 0; y < CELL_BOUNDS; y++) {
                     for (int z = 0; z < CELL_BOUNDS; z++) {
-                        cells[threeToOne(x, y, z)].sync();
-                        cells[threeToOne(x, y, z)].drawRGBCube();
+                        int oneIdx = threeToOne(x, y, z);
+                        cells[oneIdx].sync();
+                        cells[oneIdx].drawRGBCube();
                     }
                 }
             }
@@ -396,8 +406,9 @@ void drawAndSyncCells(vector<Cell> &cells, int divisor, DrawMode drawMode) {
             for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
                 for (int y = 0; y < CELL_BOUNDS; y++) {
                     for (int z = 0; z < CELL_BOUNDS; z++) {
-                        cells[threeToOne(x, y, z)].sync();
-                        cells[threeToOne(x, y, z)].drawDist();
+                        int oneIdx = threeToOne(x, y, z);
+                        cells[oneIdx].sync();
+                        cells[oneIdx].drawDist();
                     }
                 }
             }
