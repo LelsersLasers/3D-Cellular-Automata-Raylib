@@ -612,7 +612,7 @@ int main(void) {
         if (IsKeyDown(KEY_SPACE)) {
             cameraLat = 20.0f;
             cameraLon = 20.0f;
-            float cameraRadius = 1.75f * CELL_SIZE * CELL_BOUNDS;
+            cameraRadius = 1.75f * CELL_SIZE * CELL_BOUNDS;
         }
         if (enterTK.down(IsKeyPressed(KEY_ENTER))) {
             if (GetScreenWidth() == screenWidth) MaximizeWindow();
