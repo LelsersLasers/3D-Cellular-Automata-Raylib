@@ -3,10 +3,12 @@
 - Improve speed -> cell bounds = 100
     - Optimize: HOW?
         - (https://www.reddit.com/r/learnprogramming/comments/v7yn13/optimization_questions_about_c_and_cellular/)
-        - WAIT IS THE 26^1 SLOWER THAN THE 3^3 ???
+    - Profile?
+        - See where time is spent -> fix there
     - Things to try:
         - Calc on GPU?
         - Branchless programming?
+            - Profile/etc to figure out if it is actually faster
         - Multithreading?
 
 - Shaders to make cells eaiser to see?

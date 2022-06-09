@@ -2,8 +2,9 @@
 #include <math.h>
 #include <time.h>
 #include <vector>
-
+#include<thread>
 #include <iostream>
+
 using namespace std;
 
 #define PI 3.14159265358979323846f
@@ -158,9 +159,9 @@ public:
             index.y > CELL_BOUNDS/3.0f && index.y < CELL_BOUNDS * 2.0f/3.0f &&
             index.z > CELL_BOUNDS/3.0f && index.z < CELL_BOUNDS * 2.0f/3.0
         ) { // only middle has spawn chance
-            state = (double)rand() / (double)RAND_MAX < aliveChanceOnSpawn ? ALIVE : DEAD;
-            if (state == ALIVE) hp = STATE;
-            else hp = 0;
+            state = (double)rand() / (double)RAND_MAX < aliveChanceOnSpawn ? ALIVE : DEAD; // could branchless?
+            // if (state == ALIVE) hp = STATE; // old
+            hp = (int)(state/2.0f * STATE); // new
         }
         else {
             state = DEAD;
@@ -171,13 +172,17 @@ public:
     void sync() {
         switch (state) {
             case ALIVE:
-                if (!SURVIVAL[neighbors]) state = DYING;
+                // if (!SURVIVAL[neighbors]) state = DYING; // old
+                state = (State)((int)(SURVIVAL[neighbors]) + 1); // new
                 break;
             case DEAD:
-                if (SPAWN[neighbors]) {
-                    state = ALIVE;
-                    hp = STATE;
-                }
+                // if (SPAWN[neighbors]) { // old
+                //     state = ALIVE;
+                //     hp = STATE;
+                // }
+                state = (State)((int)(SPAWN[neighbors]) * 2);  // new
+                hp = (int)(state/2.0f * STATE);
+
                 break;
             case DYING:
                 if (--hp == 0) state = DEAD;
