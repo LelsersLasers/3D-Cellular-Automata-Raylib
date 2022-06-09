@@ -53,6 +53,10 @@ enum TickMode {
 };
 
 
+typedef struct Vector3Int {
+    int x, y, z;
+} Vector3Int;
+
 bool SURVIVAL[27];
 bool SPAWN[27];
 
@@ -71,17 +75,17 @@ const NeighborType NEIGHBORHOODS = MOORE;
 const Color C1 = GREEN;
 const Color C2 = RED;
 const Vector3 COLOR_OFFSET1 = {
-    ((float)C1.r - C2.r)/STATE,
-    ((float)C1.g - C2.g)/STATE,
-    ((float)C1.b - C2.b)/STATE,
+    (float)(C1.r - C2.r)/STATE,
+    (float)(C1.g - C2.g)/STATE,
+    (float)(C1.b - C2.b)/STATE,
 };
 
 const Color C3 = BLACK;
 const Color C4 = LIGHTGRAY;
 const Vector3 COLOR_OFFSET2 = {
-    ((float)C3.r - C4.r)/STATE,
-    ((float)C3.g - C4.g)/STATE,
-    ((float)C3.b - C4.b)/STATE,
+    (float)(C3.r - C4.r)/STATE,
+    (float)(C3.g - C4.g)/STATE,
+    (float)(C3.b - C4.b)/STATE,
 };
 
 const int TargetFPS = 20;
@@ -124,25 +128,25 @@ public:
     }
 };
 
-float calc_distance(Vector3 a, Vector3 b) {
-    return sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2) + pow(a.z - b.z, 2));
+float calc_distance(Vector3Int a, Vector3Int b) {
+    return sqrt(pow((float)a.x - b.x, 2) + pow((float)a.y - b.y, 2) + pow((float)a.z - b.z, 2));
 }
 
 class Cell {
 private:
     State state;
     Vector3 pos;
-    Vector3 index;
+    Vector3Int index;
     int hp;
     int neighbors = 0;
     void draw(Color color) const { DrawCube(pos, CELL_SIZE, CELL_SIZE, CELL_SIZE, color); }
 public:
-    Cell(Vector3 index) {
+    Cell(Vector3Int index) {
         this->index = index;
-        pos = (Vector3){
-            CELL_SIZE * (index.x - (CELL_BOUNDS - 1.0f) / 2.0f),
-            CELL_SIZE * (index.y - (CELL_BOUNDS - 1.0f) / 2.0f),
-            CELL_SIZE * (index.z - (CELL_BOUNDS - 1.0f) / 2.0f)
+        pos = {
+            CELL_SIZE * (index.x - (CELL_BOUNDS - 1.0f) / 2),
+            CELL_SIZE * (index.y - (CELL_BOUNDS - 1.0f) / 2),
+            CELL_SIZE * (index.z - (CELL_BOUNDS - 1.0f) / 2)
         };
         randomizeState();
     }
@@ -183,9 +187,9 @@ public:
     void drawDualColor() const {
         if (state != DEAD) {
             draw((Color){
-                (unsigned char)(C2.r + COLOR_OFFSET1.x * (float)hp),
-                (unsigned char)(C2.g + COLOR_OFFSET1.y * (float)hp),
-                (unsigned char)(C2.b + COLOR_OFFSET1.z * (float)hp),
+                (unsigned char)(C2.r + COLOR_OFFSET1.x * hp),
+                (unsigned char)(C2.g + COLOR_OFFSET1.y * hp),
+                (unsigned char)(C2.b + COLOR_OFFSET1.z * hp),
                 255
             });
         }
@@ -194,8 +198,8 @@ public:
         if (state != DEAD) {
             Color color = RED;
             if (state == DYING) {
-                float percent = (1 + (float)hp)/(STATE + 2);
-                unsigned char brightness = (int)(percent * 255.0f);
+                float percent = (1.0f + hp)/(STATE + 2.0f);
+                unsigned char brightness = (int)(percent * 255);
                 color = (Color){ brightness, brightness, brightness, 255 };
             }
             draw(color);
@@ -205,17 +209,17 @@ public:
         if (state != DEAD) {
             float x = 3.0f;
             float base = x/(STATE + x);
-            float percent = (float)hp/(STATE + x);
-            unsigned char brightness = (int)((base + percent) * 255.0f);
+            float percent = hp/(STATE + x);
+            unsigned char brightness = (int)((base + percent) * 255);
             draw((Color){ brightness, 20, 20, 255 });
         }
     }
     void drawRGBCube() const {
         if (state != DEAD) {
             draw((Color){
-                (unsigned char)(index.x/CELL_BOUNDS * 255.0f),
-                (unsigned char)(index.y/CELL_BOUNDS * 255.0f),
-                (unsigned char)(index.z/CELL_BOUNDS * 255.0f),
+                (unsigned char)((float)index.x/CELL_BOUNDS * 255),
+                (unsigned char)((float)index.y/CELL_BOUNDS * 255),
+                (unsigned char)((float)index.z/CELL_BOUNDS * 255),
                 255
             });
         }
@@ -223,11 +227,11 @@ public:
     void drawDist() const {
         if (state != DEAD) {
             float x = 3.0f;
-            float cap = CELL_BOUNDS/2.0f;
+            int cap = CELL_BOUNDS/2;
             float dist = calc_distance(index, { cap, cap, cap });
             float base = x/(cap * sqrt(3.0f) + x);
             float percent = dist/(cap * sqrt(3.0f) + x);
-            unsigned char brightness = (int)((base + percent) * 255.0f);
+            unsigned char brightness = (int)((base + percent) * 255);
             draw((Color){ brightness, brightness, brightness, 255 });
         }
     }
@@ -279,13 +283,13 @@ string textFromEnum(TickMode tm) {
 }
 
 
-bool validCellIndex(int x, int y, int z, const Vector3 &offset) {
+bool validCellIndex(int x, int y, int z, const Vector3Int &offset) {
     return x + offset.x >= 0 && x + offset.x < CELL_BOUNDS &&
            y + offset.y >= 0 && y + offset.y < CELL_BOUNDS &&
            z + offset.z >= 0 && z + offset.z < CELL_BOUNDS;
 }
 
-void updateNeighbors(vector<Cell> &cells, const Vector3 offsets[], int totalOffsets) {
+void updateNeighbors(vector<Cell> &cells, const Vector3Int offsets[], int totalOffsets) {
     for (int x = 0; x < CELL_BOUNDS; x++) {
         for (int y = 0; y < CELL_BOUNDS; y++) {
             for (int z = 0; z < CELL_BOUNDS; z++) {
@@ -305,7 +309,7 @@ void updateNeighbors(vector<Cell> &cells, const Vector3 offsets[], int totalOffs
 
 void updateCells(vector<Cell> &cells) {
     if (NEIGHBORHOODS == MOORE) {
-        const Vector3 offsets[26] = {
+        const Vector3Int offsets[26] = {
             { -1, -1, -1 },
             { -1, -1, 0 },
             { -1, -1, 1 },
@@ -336,7 +340,7 @@ void updateCells(vector<Cell> &cells) {
         updateNeighbors(cells, offsets, 26);
     }
     else {
-        const Vector3 offsets[] = {
+        const Vector3Int offsets[] = {
             { 1, 0, 0 },
             { -1, 0, 0 },
             { 0, 1, 0 },
@@ -476,7 +480,7 @@ void drawCells(vector<Cell> &cells, bool toSync, bool drawBounds, bool showHalf,
 
     if (drawBounds) {
         int outlineSize = CELL_SIZE * CELL_BOUNDS;
-        if (showHalf) DrawCubeWires((Vector3){ (float)-outlineSize/4.0f, 0, 0 }, outlineSize/2, outlineSize, outlineSize, BLUE);
+        if (showHalf) DrawCubeWires((Vector3){ -outlineSize/4.0f, 0, 0 }, outlineSize/2, outlineSize, outlineSize, BLUE);
         else DrawCubeWires((Vector3){ 0, 0, 0 }, outlineSize, outlineSize, outlineSize, BLUE);
     }
 }
@@ -590,7 +594,7 @@ int main(void) {
     for (int x = 0; x < CELL_BOUNDS; x++) {
         for (int y = 0; y < CELL_BOUNDS; y++) {
             for (int z = 0; z < CELL_BOUNDS; z++) {
-                cells.push_back(Cell({ (float)x, (float)y, (float)z }));
+                cells.push_back(Cell({ x, y, z }));
             }
         }
     }
