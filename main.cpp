@@ -244,24 +244,6 @@ public:
 };
 
 
-void setupBoolArrays() {
-    for (int value : survival_numbers) {
-        SURVIVAL[value] = true;
-    }
-    for (int value : spawn_numbers) {
-        SPAWN[value] = true;
-    }
-}
-
-float degreesToRadians(float degrees) {
-    return degrees * PI / 180.0f;
-}
-
-int threeToOne(int x, int y, int z) {
-    return x * CELL_BOUNDS * CELL_BOUNDS + y * CELL_BOUNDS  + z;
-}
-
-
 string textFromEnum(NeighborType nt) {
     switch (nt) {
         case MOORE: return "Moore";
@@ -289,10 +271,34 @@ string textFromEnum(TickMode tm) {
 }
 
 
+void setupBoolArrays() {
+    for (int value : survival_numbers) {
+        SURVIVAL[value] = true;
+    }
+    for (int value : spawn_numbers) {
+        SPAWN[value] = true;
+    }
+}
+
+float degreesToRadians(float degrees) {
+    return degrees * PI / 180.0f;
+}
+
+int threeToOne(int x, int y, int z) {
+    return x * CELL_BOUNDS * CELL_BOUNDS + y * CELL_BOUNDS  + z;
+}
+
+
 bool validCellIndex(int x, int y, int z, const Vector3Int &offset) {
     return x + offset.x >= 0 && x + offset.x < CELL_BOUNDS &&
            y + offset.y >= 0 && y + offset.y < CELL_BOUNDS &&
            z + offset.z >= 0 && z + offset.z < CELL_BOUNDS;
+}
+
+void syncCells(vector<Cell> &cells, int start, int end) {
+    for (int i = start; i < end; i++) {
+        cells[i].sync();
+    }
 }
 
 void updateNeighbors(vector<Cell> &cells, int start, int end, const Vector3Int offsets[], int totalOffsets) {
@@ -392,86 +398,28 @@ void updateCells(vector<Cell> &cells) {
         totalOffsets = 6;
     }
 
-    thread threads[THREADS];
+    thread neighborThreads[THREADS];
     for (int i = 0; i < THREADS; i++) {
         int start = i * CELL_BOUNDS / THREADS;
         int end = (i + 1) * CELL_BOUNDS / THREADS;
-        threads[i] = thread(updateNeighbors, ref(cells), start, end, offsets, totalOffsets);
+        neighborThreads[i] = thread(updateNeighbors, ref(cells), start, end, offsets, totalOffsets);
     }
     for (int i = 0; i < THREADS; i++) {
-        threads[i].join();
+        neighborThreads[i].join();
+    }
+
+    thread syncThreads[THREADS];
+    int totalCells = CELL_BOUNDS * CELL_BOUNDS * CELL_BOUNDS;
+    for (int i = 0; i < THREADS; i++) {
+        int start = i * totalCells / THREADS;
+        int end = (i + 1) * totalCells / THREADS;
+        syncThreads[i] = thread(syncCells, ref(cells), start, end);
+    }
+    for (int i = 0; i < THREADS; i++) {
+        syncThreads[i].join();
     }
 }
 
-
-void drawAndSyncCells(vector<Cell> &cells, int divisor, DrawMode drawMode) {
-    // A bit exessive to put this outside, but is saves doing CELL_BOUNDS^3 extra checks
-    // at the cost of extra code
-    switch (drawMode) {
-        case DUAL_COLOR:
-            for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
-                for (int y = 0; y < CELL_BOUNDS; y++) {
-                    for (int z = 0; z < CELL_BOUNDS; z++) {
-                        int oneIdx = threeToOne(x, y, z);
-                        cells[oneIdx].sync();
-                        cells[oneIdx].drawDualColor();
-                    }
-                }
-            }
-            break;
-        case DUAL_COLOR_DYING:
-            for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
-                for (int y = 0; y < CELL_BOUNDS; y++) {
-                    for (int z = 0; z < CELL_BOUNDS; z++) {
-                        int oneIdx = threeToOne(x, y, z);
-                        cells[oneIdx].sync();
-                        cells[oneIdx].drawDualColorDying();
-                    }
-                }
-            }
-            break;
-        case SINGLE_COLOR:
-            for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
-                for (int y = 0; y < CELL_BOUNDS; y++) {
-                    for (int z = 0; z < CELL_BOUNDS; z++) {
-                        int oneIdx = threeToOne(x, y, z);
-                        cells[oneIdx].sync();
-                        cells[oneIdx].drawSingleColor();
-                    }
-                }
-            }
-            break;
-        case RGB_CUBE:
-            for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
-                for (int y = 0; y < CELL_BOUNDS; y++) {
-                    for (int z = 0; z < CELL_BOUNDS; z++) {
-                        int oneIdx = threeToOne(x, y, z);
-                        cells[oneIdx].sync();
-                        cells[oneIdx].drawRGBCube();
-                    }
-                }
-            }
-            break;
-        case CENTER_DIST:
-            for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
-                for (int y = 0; y < CELL_BOUNDS; y++) {
-                    for (int z = 0; z < CELL_BOUNDS; z++) {
-                        int oneIdx = threeToOne(x, y, z);
-                        cells[oneIdx].sync();
-                        cells[oneIdx].drawDist();
-                    }
-                }
-            }
-            break;
-    }
-    for (int x = CELL_BOUNDS/divisor; x < CELL_BOUNDS; x++) { // still sync second half
-        for (int y = 0; y < CELL_BOUNDS; y++) {
-            for (int z = 0; z < CELL_BOUNDS; z++) {
-                cells[threeToOne(x, y, z)].sync();
-            }
-        }
-    }
-}
 
 void basicDrawCells(const vector<Cell> &cells, int divisor, DrawMode drawMode) {
     // A bit exessive to put this outside, but is saves doing CELL_BOUNDS^3 extra checks
@@ -525,9 +473,8 @@ void basicDrawCells(const vector<Cell> &cells, int divisor, DrawMode drawMode) {
     }
 }
 
-void drawCells(vector<Cell> &cells, bool toSync, bool drawBounds, bool showHalf, DrawMode drawMode) {
-    if (toSync) drawAndSyncCells(cells, (int)showHalf + 1, drawMode);
-    else basicDrawCells(cells, (int)showHalf + 1, drawMode);
+void drawCells(vector<Cell> &cells, bool drawBounds, bool showHalf, DrawMode drawMode) {
+    basicDrawCells(cells, (int)showHalf + 1, drawMode);
 
     if (drawBounds) {
         int outlineSize = CELL_SIZE * CELL_BOUNDS;
@@ -579,7 +526,7 @@ void drawLeftBar(bool drawBounds, bool showHalf, bool paused, DrawMode drawMode,
         DrawableText("- FPS: " + to_string(GetFPS())),
         DrawableText("- Ticks per sec: " + to_string(tickMode == FAST ? GetFPS() : updateSpeed)),
         DrawableText("- Bound size: " + to_string(CELL_BOUNDS)),
-        DrawableText("- Threads: " + to_string(THREADS) + " (+ main thread)"),
+        DrawableText("- Threads: " + to_string(THREADS) + " (+ 2)"),
         DrawableText("- Camera pos: " + to_string((int)abs(cameraLat)) + dirs[0] + ", " + to_string(abs((int)cameraLon)) + dirs[1]),
 
         DrawableText("Rules:"),
@@ -651,6 +598,8 @@ int main(void) {
             }
         }
     }
+    vector<Cell> cells2 = cells;
+    cells2.reserve(CELL_BOUNDS * CELL_BOUNDS * CELL_BOUNDS);
 
     // Main game loop
     while (!WindowShouldClose()) {
@@ -694,28 +643,37 @@ int main(void) {
             cameraRadius * sin(degreesToRadians(cameraLat))
         };
 
-        bool toSync = false;
         if (!paused && (tickMode == FAST || frame >= 1.0f/updateSpeed)) {
             if (tickMode == DYNAMIC) {
                 if (GetFPS() > TargetFPS && updateSpeed < GetFPS()) updateSpeed++;
                 else if (GetFPS() < TargetFPS && updateSpeed > 1) updateSpeed--;
             }
-            updateCells(cells);
-            toSync = true;
-            while (frame >= 1.0/updateSpeed) frame -= 1.0/updateSpeed;
+            while (tickMode != FAST && frame >= 1.0/updateSpeed) frame -= 1.0/updateSpeed;
+
+            cells2 = vector<Cell>(cells);
+            thread updateThread(updateCells, ref(cells2));
+            
+            BeginDrawing();
+                ClearBackground(RAYWHITE);
+                BeginMode3D(camera);
+                    drawCells(cells, drawBounds, showHalf, drawMode);
+                EndMode3D();
+                drawLeftBar(drawBounds, showHalf, paused, drawMode, tickMode, cameraLat, cameraLon, updateSpeed);
+            EndDrawing();
+
+            updateThread.join();
+            cells = vector<Cell>(cells2);
+        }
+        else {
+            BeginDrawing();
+                ClearBackground(RAYWHITE);
+                BeginMode3D(camera);
+                    drawCells(cells, drawBounds, showHalf, drawMode);
+                EndMode3D();
+                drawLeftBar(drawBounds, showHalf, paused, drawMode, tickMode, cameraLat, cameraLon, updateSpeed);
+            EndDrawing();
         }
 
-        BeginDrawing();
-
-            ClearBackground(RAYWHITE);
-
-            BeginMode3D(camera);
-                drawCells(cells, toSync, drawBounds, showHalf, drawMode);
-            EndMode3D();
-
-            drawLeftBar(drawBounds, showHalf, paused, drawMode, tickMode, cameraLat, cameraLon, updateSpeed);
-
-        EndDrawing();
     }
 
     CloseWindow();        // Close window and OpenGL context

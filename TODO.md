@@ -8,16 +8,20 @@
     - Things to try:
         - Branchless programming?
             - Profile/etc to figure out if it is actually faster
+            - fastest possible is:
+                - new_state = old_state * transistion
+                - Can do with linear math
 
 - Multithreading
     - Must do update -> sync
     - render does not support multithreading
     - multithread randomize() ?
+    - Current ('||' = parallel)):
+        - update + sync || render
+        - update and sync are both split into 8 slices
     - A)
         - thread1: update -> sync as fast as possible (update/sync multithreaded)
         - main thread: render based on updatespeed/tick mode
-    - B)
-        - main thread: multithread update -> sync/draw (current setup)
     - C)
         - can run update in parallel with render
         - same with sync?
