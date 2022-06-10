@@ -151,25 +151,18 @@ public:
             CELL_SIZE * (index.y - (CELL_BOUNDS - 1.0f) / 2),
             CELL_SIZE * (index.z - (CELL_BOUNDS - 1.0f) / 2)
         };
-        randomizeState();
     }
     void clearNeighbors() { neighbors = 0; }
     void addNeighbor(int neighborState) { neighbors += neighborState/2; }
     State getState() const { return state; }
-    void randomizeState() {
-        if (index.x > CELL_BOUNDS/3.0f && index.x < CELL_BOUNDS * 2.0f/3.0f &&
-            index.y > CELL_BOUNDS/3.0f && index.y < CELL_BOUNDS * 2.0f/3.0f &&
-            index.z > CELL_BOUNDS/3.0f && index.z < CELL_BOUNDS * 2.0f/3.0
-        ) { // only middle has spawn chance
-            state = (double)rand() / (double)RAND_MAX < aliveChanceOnSpawn ? ALIVE : DEAD; // could branchless?
-            // if (state == ALIVE) hp = STATE; // old
-            hp = (int)(state/2.0f * STATE); // new
-        }
-        else {
-            state = DEAD;
-            hp = 0;
-        }
+    void reset() {
+        state = DEAD;
+        hp = 0;
         neighbors = 0;
+    }
+    void randomizeState() {
+        state = (double)rand() / (double)RAND_MAX < aliveChanceOnSpawn ? ALIVE : DEAD;
+        hp = (int)(state/2.0f * STATE);
     }
     void sync() {
         switch (state) {
@@ -184,7 +177,6 @@ public:
                 // }
                 state = (State)((int)(SPAWN[neighbors]) * 2);  // new
                 hp = (int)(state/2.0f * STATE);
-
                 break;
             case DYING:
                 if (--hp == 0) state = DEAD;
@@ -476,7 +468,14 @@ void drawCells(const vector<Cell> &cells, int divisor, DrawMode drawMode) {
 
 void randomizeCells(vector<Cell> &cells) {
     for (size_t i = 0; i < TOTAL_CELLS; i++) {
-        cells[i].randomizeState();
+        cells[i].reset();
+    }
+    for (int x = CELL_BOUNDS/3.0f; x < CELL_BOUNDS * 2.0f/3.0f; x++) {
+        for (int y = CELL_BOUNDS/3.0f; y < CELL_BOUNDS * 2.0f/3.0f; y++) {
+            for (int z = CELL_BOUNDS/3.0f; z < CELL_BOUNDS * 2.0f/3.0f; z++) {
+                cells[threeToOne(x, y, z)].randomizeState();
+            }
+        }
     }
 }
 
@@ -612,6 +611,7 @@ int main(void) {
             }
         }
     }
+    randomizeCells(cells);
     vector<Cell> cells2 = cells;
     cells2.reserve(TOTAL_CELLS);
 
