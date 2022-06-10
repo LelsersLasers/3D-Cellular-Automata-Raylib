@@ -32,3 +32,5 @@
 - Menu screens etc?
 - Calc on GPU?
 - Shaders to make cells eaiser to see?
+
+- Readme, showcases, etc
