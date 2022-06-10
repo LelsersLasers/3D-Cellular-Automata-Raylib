@@ -509,6 +509,7 @@ void drawLeftBar(bool drawBounds, bool showHalf, bool paused, DrawMode drawMode,
         DrawableText("- Mouse click : pause/unpause " + (string)(paused ? "(paused)" : "(running)")),
         DrawableText("- Space : reset camera"),
         DrawableText("- Enter : toggle fullscreen"),
+        DrawableText("- O : toggle true fullscreen (not reccomended)"),
         DrawableText("- M : change between draw modes [" + textFromEnum(drawMode) + "]"),
         DrawableText("- U : change between tick modes [" + textFromEnum(tickMode) + "]"),
         (tickMode == MANUAL ? DrawableText("- X/Z : increase/decrease tick speed") : DrawableText("")),
@@ -598,6 +599,7 @@ int main(void) {
     ToggleKey mTK;
     ToggleKey uTK;
     ToggleKey pTK;
+    ToggleKey oTK;
 
     int updateSpeed = 8;
     float frame = 0;
@@ -642,6 +644,16 @@ int main(void) {
         if (enterTK.down(IsKeyPressed(KEY_ENTER))) {
             if (GetScreenWidth() == screenWidth) MaximizeWindow();
             else RestoreWindow();
+        }
+        if (oTK.down(IsKeyPressed('O'))) {
+ 			ToggleFullscreen();
+            if (IsWindowFullscreen()) {
+                int display = GetCurrentMonitor();
+                SetWindowSize(GetMonitorWidth(display), GetMonitorHeight(display));
+            }
+            else  {
+                SetWindowSize(screenWidth, screenHeight);
+            }
         }
 
         if (cameraLat > 90) cameraLat = 89.99f;

@@ -11,6 +11,8 @@
             - fastest possible is:
                 - new_state = old_state * transistion
                 - Can do with linear math
+        - 1 cell surrounding padding to eleminate checkValidIndex?
+            - 102^3/100^3 = 1.06 = 6% more cells
 
 - Multithreading
     - Must do update -> sync
