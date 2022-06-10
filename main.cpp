@@ -13,6 +13,7 @@ using std::thread;
 
 #define CELL_SIZE 1.0f
 #define CELL_BOUNDS 96 // cleaner if divisible by THREADS
+#define TOTAL_CELLS 884736
 #define aliveChanceOnSpawn 0.15f
 #define THREADS 8
 
@@ -409,10 +410,9 @@ void updateCells(vector<Cell> &cells) {
     }
 
     thread syncThreads[THREADS];
-    int totalCells = CELL_BOUNDS * CELL_BOUNDS * CELL_BOUNDS;
     for (size_t i = 0; i < THREADS; i++) {
-        size_t start = i * totalCells / THREADS;
-        size_t end = (i + 1) * totalCells / THREADS;
+        size_t start = i * TOTAL_CELLS / THREADS;
+        size_t end = (i + 1) * TOTAL_CELLS / THREADS;
         syncThreads[i] = thread(syncCells, std::ref(cells), start, end);
     }
     for (size_t i = 0; i < THREADS; i++) {
@@ -475,7 +475,7 @@ void drawCells(const vector<Cell> &cells, int divisor, DrawMode drawMode) {
 
 
 void randomizeCells(vector<Cell> &cells) {
-    for (size_t i = 0; i < CELL_BOUNDS * CELL_BOUNDS * CELL_BOUNDS; i++) {
+    for (size_t i = 0; i < TOTAL_CELLS; i++) {
         cells[i].randomizeState();
     }
 }
@@ -613,7 +613,7 @@ int main(void) {
         }
     }
     vector<Cell> cells2 = cells;
-    cells2.reserve(CELL_BOUNDS * CELL_BOUNDS * CELL_BOUNDS);
+    cells2.reserve(TOTAL_CELLS);
 
     // Main game loop
     while (!WindowShouldClose()) {
@@ -678,13 +678,13 @@ int main(void) {
             cells2 = vector<Cell>(cells);
             thread updateThread(updateCells, std::ref(cells2));
 
-            draw(camera,cells, drawBounds, drawBar, showHalf, paused, drawMode, tickMode, cameraLat, cameraLon, updateSpeed);
+            draw(camera, cells, drawBounds, drawBar, showHalf, paused, drawMode, tickMode, cameraLat, cameraLon, updateSpeed);
 
             updateThread.join();
             cells = vector<Cell>(cells2);
         }
         else {
-            draw(camera,cells, drawBounds, drawBar, showHalf, paused, drawMode, tickMode, cameraLat, cameraLon, updateSpeed);
+            draw(camera, cells, drawBounds, drawBar, showHalf, paused, drawMode, tickMode, cameraLat, cameraLon, updateSpeed);
         }
 
     }
