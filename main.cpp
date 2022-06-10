@@ -1,34 +1,3 @@
-/*
-Basic rules/explaination:
-- Survival:
-    - If a cell is alive, it will remain alive if it has A neighbors
-- Spawn:
-    - If a cell has B neighbors, it will come alive if dead
-- State:
-    - Once a cell begins dying, it has C game ticks to live before disappearing
-    - Nothing can keep the cell from dying (even if neighbors change)
-- Neighborhoods:
-    - "M": Moore: faces + counts diagonal neighbors, think rubics cube (3^3 - 1 = 26 possible neighbors)
-    - "VN": Von Neuman: only counts neighors where the faces touch (6 possible)
-- To change rules:
-    - Edit 'rules.json'
-    - Will not 'live' reload
-
-Some example
-- Slow build up: 9-18/5-7,12-13,15/6/M
-    "survival": [9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
-    "spawn": [5, 6, 7, 12, 13, 15],
-    "state": 6,
-    "neighborhood": "M"
-- Outward expansion + hallow center 2,6,9/4,6,8-9/10/M
-    "survival": [2, 6, 9],
-    "spawn": [4, 6, 8, 9],
-    "state": 10,
-    "neighborhood": "M"
-*/
-
-
-
 #include "raylib.h"
 #include <math.h>
 #include <time.h>
@@ -49,6 +18,7 @@ using json = nlohmann::json;
 #define PI 3.14159265358979323846f
 
 #define JSON_FILE "rules.json"
+
 
 enum NeighborType {
     MOORE,

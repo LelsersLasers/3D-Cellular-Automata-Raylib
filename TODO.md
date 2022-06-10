@@ -1,6 +1,8 @@
 # TODO
 
 Cleaning:
+- Is state done right?
+    - and fix '0' state?
 - 'hard set' offsets in updateCells()
 - Where can use branchless? Is it faster?
 
@@ -19,5 +21,7 @@ Possible/advanced/likely won't happen ideas
         - See where time is spent -> fix there
 
 Non-code:
-- Readme, showcases, json "comment", explainantion of rules, etc
+- Readme
+    - fit the game of life repo somewhere in it
+- showcases, json "comment", explainantion of rules, etc
 - Organize into multiple files?
