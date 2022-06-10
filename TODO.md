@@ -12,12 +12,16 @@
 - Multithreading
     - Must do update -> sync
     - render does not support multithreading
-    - multithread randomize()
+    - multithread randomize() ?
     - A)
         - thread1: update -> sync as fast as possible (update/sync multithreaded)
         - main thread: render based on updatespeed/tick mode
     - B)
         - main thread: multithread update -> sync/draw (current setup)
+    - C)
+        - can run update in parallel with render
+        - same with sync?
+        - how would work when tick mode != fastest
     - C) some comibination of A and B
 
 

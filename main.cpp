@@ -10,7 +10,7 @@ using namespace std;
 #define PI 3.14159265358979323846f
 
 #define CELL_SIZE 1.0f
-#define CELL_BOUNDS 96 // must be divisible by THREADS
+#define CELL_BOUNDS 96 // cleaner if divisible by THREADS
 #define aliveChanceOnSpawn 0.15f
 #define THREADS 8
 
@@ -49,9 +49,9 @@ enum DrawMode {
 };
 
 enum TickMode {
-    MANUAL = 0,
-    FAST = 1,
-    DYNAMIC = 2
+    FAST = 0,
+    DYNAMIC = 1,
+    MANUAL = 2
 };
 
 
@@ -90,7 +90,7 @@ const Vector3 COLOR_OFFSET2 = {
     (float)(C3.b - C4.b)/STATE,
 };
 
-const int TargetFPS = 20;
+const int TargetFPS = 8;
 
 
 class ToggleKey {
@@ -573,11 +573,13 @@ void drawLeftBar(bool drawBounds, bool showHalf, bool paused, DrawMode drawMode,
         DrawableText("- Enter : toggle fullscreen"),
         DrawableText("- M : change between draw modes [" + textFromEnum(drawMode) + "]"),
         DrawableText("- U : change between tick modes [" + textFromEnum(tickMode) + "]"),
+        (tickMode == MANUAL ? DrawableText("- X/Z : increase/decrease tick speed") : DrawableText("")),
 
         DrawableText("Simulation Info:"),
         DrawableText("- FPS: " + to_string(GetFPS())),
         DrawableText("- Ticks per sec: " + to_string(tickMode == FAST ? GetFPS() : updateSpeed)),
         DrawableText("- Bound size: " + to_string(CELL_BOUNDS)),
+        DrawableText("- Threads: " + to_string(THREADS) + " (+ main thread)"),
         DrawableText("- Camera pos: " + to_string((int)abs(cameraLat)) + dirs[0] + ", " + to_string(abs((int)cameraLon)) + dirs[1]),
 
         DrawableText("Rules:"),
@@ -624,10 +626,10 @@ int main(void) {
     const float cameraZoomSpeed = CELL_SIZE * CELL_BOUNDS/10.0f;
 
     bool paused = false;
-    bool drawBounds = true;
+    bool drawBounds = false;
     bool showHalf = false;
     DrawMode drawMode = DUAL_COLOR;
-    TickMode tickMode = MANUAL;
+    TickMode tickMode = FAST;
 
     ToggleKey mouseTK;
     ToggleKey enterTK;
