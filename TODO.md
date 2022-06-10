@@ -31,7 +31,6 @@
 
 - Cleaning:
     - 'size_t' to index
-    - not use std namespace
     - 'hard set' offsets in updateCells()
     - Where can use branchless? Is it faster?
 

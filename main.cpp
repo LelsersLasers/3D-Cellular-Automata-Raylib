@@ -5,7 +5,9 @@
 #include <thread>
 #include <iostream>
 
-using namespace std;
+using std::string;
+using std::vector;
+using std::thread;
 
 #define PI 3.14159265358979323846f
 
@@ -55,9 +57,9 @@ enum TickMode {
 };
 
 
-typedef struct Vector3Int {
+struct Vector3Int {
     int x, y, z;
-} Vector3Int;
+};
 
 bool SURVIVAL[27];
 bool SPAWN[27];
@@ -113,9 +115,7 @@ class DrawableText {
 private:
     string text;
 public:
-    DrawableText(string text) {
-        this->text = text;
-    }
+    DrawableText(string text) : text(text) {}
     void draw(int i) const {
         int x = 30;
         Color color = DARKGRAY;
@@ -402,7 +402,7 @@ void updateCells(vector<Cell> &cells) {
     for (int i = 0; i < THREADS; i++) {
         int start = i * CELL_BOUNDS / THREADS;
         int end = (i + 1) * CELL_BOUNDS / THREADS;
-        neighborThreads[i] = thread(updateNeighbors, ref(cells), start, end, offsets, totalOffsets);
+        neighborThreads[i] = thread(updateNeighbors, std::ref(cells), start, end, offsets, totalOffsets);
     }
     for (int i = 0; i < THREADS; i++) {
         neighborThreads[i].join();
@@ -413,7 +413,7 @@ void updateCells(vector<Cell> &cells) {
     for (int i = 0; i < THREADS; i++) {
         int start = i * totalCells / THREADS;
         int end = (i + 1) * totalCells / THREADS;
-        syncThreads[i] = thread(syncCells, ref(cells), start, end);
+        syncThreads[i] = thread(syncCells, std::ref(cells), start, end);
     }
     for (int i = 0; i < THREADS; i++) {
         syncThreads[i].join();
@@ -499,12 +499,12 @@ void drawLeftBar(bool drawBounds, bool showHalf, bool paused, DrawMode drawMode,
 
     string survivalText = "- Survive:";
     for (int i = 0; i < 27; i++) {
-        if (SURVIVAL[i]) survivalText += " " + to_string(i);
+        if (SURVIVAL[i]) survivalText += " " + std::to_string(i);
     }
 
     string spawnText = "- Spawn:";
     for (int i = 0; i < 27; i++) {
-        if (SPAWN[i]) spawnText += " " + to_string(i);
+        if (SPAWN[i]) spawnText += " " + std::to_string(i);
     }
 
     const DrawableText dts[] = {
@@ -523,16 +523,16 @@ void drawLeftBar(bool drawBounds, bool showHalf, bool paused, DrawMode drawMode,
         (tickMode == MANUAL ? DrawableText("- X/Z : increase/decrease tick speed") : DrawableText("")),
 
         DrawableText("Simulation Info:"),
-        DrawableText("- FPS: " + to_string(GetFPS())),
-        DrawableText("- Ticks per sec: " + to_string(tickMode == FAST ? GetFPS() : updateSpeed)),
-        DrawableText("- Bound size: " + to_string(CELL_BOUNDS)),
-        DrawableText("- Threads: " + to_string(THREADS) + " (+ 2)"),
-        DrawableText("- Camera pos: " + to_string((int)abs(cameraLat)) + dirs[0] + ", " + to_string(abs((int)cameraLon)) + dirs[1]),
+        DrawableText("- FPS: " + std::to_string(GetFPS())),
+        DrawableText("- Ticks per sec: " + std::to_string(tickMode == FAST ? GetFPS() : updateSpeed)),
+        DrawableText("- Bound size: " + std::to_string(CELL_BOUNDS)),
+        DrawableText("- Threads: " + std::to_string(THREADS) + " (+ 2)"),
+        DrawableText("- Camera pos: " + std::to_string((int)abs(cameraLat)) + dirs[0] + ", " + std::to_string(abs((int)cameraLon)) + dirs[1]),
 
         DrawableText("Rules:"),
         DrawableText(survivalText),
         DrawableText(spawnText),
-        DrawableText("- State: " + to_string(STATE)),
+        DrawableText("- State: " + std::to_string(STATE)),
         DrawableText("- Neighborhood: " + textFromEnum(NEIGHBORHOODS)),
     };
 
@@ -651,7 +651,7 @@ int main(void) {
             while (tickMode != FAST && frame >= 1.0/updateSpeed) frame -= 1.0/updateSpeed;
 
             cells2 = vector<Cell>(cells);
-            thread updateThread(updateCells, ref(cells2));
+            thread updateThread(updateCells, std::ref(cells2));
             
             BeginDrawing();
                 ClearBackground(RAYWHITE);
