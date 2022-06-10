@@ -1,15 +1,50 @@
+/*
+Basic rules/explaination:
+- Survival:
+    - If a cell is alive, it will remain alive if it has A neighbors
+- Spawn:
+    - If a cell has B neighbors, it will come alive if dead
+- State:
+    - Once a cell begins dying, it has C game ticks to live before disappearing
+    - Nothing can keep the cell from dying (even if neighbors change)
+- Neighborhoods:
+    - "M": Moore: faces + counts diagonal neighbors, think rubics cube (3^3 - 1 = 26 possible neighbors)
+    - "VN": Von Neuman: only counts neighors where the faces touch (6 possible)
+- To change rules:
+    - Edit 'rules.json'
+    - Will not 'live' reload
+
+Some example
+- Slow build up: 9-18/5-7,12-13,15/6/M
+    "survival": [9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
+    "spawn": [5, 6, 7, 12, 13, 15],
+    "state": 6,
+    "neighborhood": "M"
+- Outward expansion + hallow center 2,6,9/4,6,8-9/10/M
+    "survival": [2, 6, 9],
+    "spawn": [4, 6, 8, 9],
+    "state": 10,
+    "neighborhood": "M"
+*/
+
+
+
 #include "raylib.h"
 #include <math.h>
 #include <time.h>
 #include <vector>
 #include <thread>
 #include <iostream>
+#include <fstream>
 
 #include "json.hpp"
 
 using std::string;
 using std::vector;
 using std::thread;
+
+using json = nlohmann::json;
+
 
 #define PI 3.14159265358979323846f
 
@@ -18,21 +53,7 @@ using std::thread;
 #define TOTAL_CELLS 884736
 #define aliveChanceOnSpawn 0.15f
 #define THREADS 8
-
-
-/*
-Rules/explaination:
-- Survival:
-    - If a cell is alive, it will remain alive if it has A neighbors
-- Spawn:
-    - If a cell has B neighbors, it will come alive if dead
-- State:
-    - Once a cell begins dying, it has C game ticks to live before disappearing
-    - Nothing can keep the cell from dying (even if neighbors change)
-- Neighbor:
-    - [M]oore: counts diagonal neighbors (3^3 - 1 = 26 possible neighbors)
-    - [V]on [N]euman: only counts neighors where the faces touch (6 possible)
-*/
+#define JSON_FILE "rules.json"
 
 enum NeighborType {
     MOORE,
@@ -66,33 +87,15 @@ struct Vector3Int {
 
 bool SURVIVAL[27];
 bool SPAWN[27];
-
-// My rules 9-18/5-7,12-13,15/6/M
-// const size_t survival_numbers[] = { 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 };
-// const size_t spawn_numbers[] = { 5, 6, 7, 12, 13, 15 };
-// const int STATE = 6;
-// const NeighborType NEIGHBORHOODS = MOORE;
-
-// Builder 1 (Jason Rampe) 2,6,9/4,6,8-9/10/M
-const size_t survival_numbers[] = { 2, 6, 9 };
-const size_t spawn_numbers[] = { 4, 6, 8, 9 };
-const int STATE = 10;
-const NeighborType NEIGHBORHOODS = MOORE;
+int STATE;
+NeighborType NEIGHBORHOODS;
 
 const Color C1 = GREEN;
 const Color C2 = RED;
 const Vector3 COLOR_OFFSET1 = {
-    (float)(C1.r - C2.r)/STATE,
-    (float)(C1.g - C2.g)/STATE,
-    (float)(C1.b - C2.b)/STATE,
-};
-
-const Color C3 = BLACK;
-const Color C4 = LIGHTGRAY;
-const Vector3 COLOR_OFFSET2 = {
-    (float)(C3.r - C4.r)/STATE,
-    (float)(C3.g - C4.g)/STATE,
-    (float)(C3.b - C4.b)/STATE,
+    (float)(C1.r - C2.r),
+    (float)(C1.g - C2.g),
+    (float)(C1.b - C2.b)
 };
 
 const int TargetFPS = 8;
@@ -188,9 +191,9 @@ public:
     void drawDualColor() const {
         if (state != DEAD) {
             draw((Color){
-                (unsigned char)(C2.r + COLOR_OFFSET1.x * hp),
-                (unsigned char)(C2.g + COLOR_OFFSET1.y * hp),
-                (unsigned char)(C2.b + COLOR_OFFSET1.z * hp),
+                (unsigned char)(C2.r + COLOR_OFFSET1.x/STATE * hp),
+                (unsigned char)(C2.g + COLOR_OFFSET1.y/STATE * hp),
+                (unsigned char)(C2.b + COLOR_OFFSET1.z/STATE * hp),
                 255
             });
         }
@@ -266,14 +269,31 @@ string textFromEnum(TickMode tm) {
 }
 
 
-void setupBoolArrays() {
-    for (size_t value : survival_numbers) {
-        SURVIVAL[value] = true;
+void setupFromJSON() {
+    try {
+        json rules;
+        std::ifstream reader(JSON_FILE);
+        reader >> rules;
+        reader.close();
+
+        for (size_t value : rules["survival"]) {
+            SURVIVAL[value] = true;
+        }
+        for (size_t value : rules["spawn"]) {
+            SPAWN[value] = true;
+        }
+        STATE = rules["state"];
+        if (rules["neighborhood"] == "VN") NEIGHBORHOODS = VON_NEUMANN;
+        else NEIGHBORHOODS = MOORE;
     }
-    for (size_t value : spawn_numbers) {
-        SPAWN[value] = true;
+    catch (std::exception& e) {
+        std::cout << "Error: " << e.what() << std::endl;
+        std::cout << "JSON 'rules.json' not found or invalid." << std::endl;
+        std::cout << "Exiting..." << std::endl;
+        exit(EXIT_FAILURE);
     }
 }
+
 
 float degreesToRadians(float degrees) {
     return degrees * PI / 180.0f;
@@ -488,7 +508,7 @@ void drawLeftBar(bool drawBounds, bool showHalf, bool paused, DrawMode drawMode,
         (cameraLon > 0 ? 'W' : 'E')
     };
 
-    string survivalText = "- Survive:";
+    string survivalText = "- Survival:";
     for (size_t i = 0; i < 27; i++) {
         if (SURVIVAL[i]) survivalText += " " + std::to_string(i);
     }
@@ -569,7 +589,7 @@ int main(void) {
     InitWindow(screenWidth, screenHeight, "3D Cellular Automata with Raylib");
     SetWindowState(FLAG_WINDOW_RESIZABLE);
 
-    setupBoolArrays();
+    setupFromJSON();
 
     Camera3D camera = { 0 };
     camera.position = (Vector3){ 10.0f, 10.0f, 10.0f };

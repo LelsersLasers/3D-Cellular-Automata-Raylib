@@ -41,4 +41,5 @@
 - Calc on GPU?
 - Shaders to make cells eaiser to see?
 
-- Readme, showcases, etc
+- Readme, showcases, json "comment", explainantion of rules, etc
+- Organize into multiple files?
