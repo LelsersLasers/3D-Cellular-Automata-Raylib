@@ -421,7 +421,7 @@ void updateCells(vector<Cell> &cells) {
 }
 
 
-void basicDrawCells(const vector<Cell> &cells, int divisor, DrawMode drawMode) {
+void drawCells(const vector<Cell> &cells, int divisor, DrawMode drawMode) {
     // A bit exessive to put this outside, but is saves doing CELL_BOUNDS^3 extra checks
     // at the cost of extra code
     switch (drawMode) {
@@ -473,16 +473,6 @@ void basicDrawCells(const vector<Cell> &cells, int divisor, DrawMode drawMode) {
     }
 }
 
-void drawCells(vector<Cell> &cells, bool drawBounds, bool showHalf, DrawMode drawMode) {
-    basicDrawCells(cells, (int)showHalf + 1, drawMode);
-
-    if (drawBounds) {
-        int outlineSize = CELL_SIZE * CELL_BOUNDS;
-        if (showHalf) DrawCubeWires((Vector3){ -outlineSize/4.0f, 0, 0 }, outlineSize/2, outlineSize, outlineSize, BLUE);
-        else DrawCubeWires((Vector3){ 0, 0, 0 }, outlineSize, outlineSize, outlineSize, BLUE);
-    }
-}
-
 
 void randomizeCells(vector<Cell> &cells) {
     for (size_t i = 0; i < CELL_BOUNDS * CELL_BOUNDS * CELL_BOUNDS; i++) {
@@ -514,6 +504,7 @@ void drawLeftBar(bool drawBounds, bool showHalf, bool paused, DrawMode drawMode,
         DrawableText("- A/D : rotate camera left/right"),
         DrawableText("- R : re-randomize cells"),
         DrawableText("- B : show/hide bounds " + (string)(drawBounds ? "(on)" : "(off)")),
+        DrawableText("- P : show/hide this bar (on)"),
         DrawableText("- C : toggle cross section view " + (string)(showHalf ? "(on)" : "(off)")),
         DrawableText("- Mouse click : pause/unpause " + (string)(paused ? "(paused)" : "(running)")),
         DrawableText("- Space : reset camera"),
@@ -547,6 +538,25 @@ void drawLeftBar(bool drawBounds, bool showHalf, bool paused, DrawMode drawMode,
 }
 
 
+void draw(Camera3D camera, const vector<Cell> &cells, bool drawBounds, bool drawBar, bool showHalf, bool paused, DrawMode drawMode, TickMode tickMode, float cameraLat, float cameraLon, int updateSpeed) {
+    BeginDrawing();
+        ClearBackground(RAYWHITE);
+        BeginMode3D(camera);
+            drawCells(cells, (int)showHalf + 1, drawMode);
+
+            if (drawBounds) {
+                int outlineSize = CELL_SIZE * CELL_BOUNDS;
+                if (showHalf) DrawCubeWires((Vector3){ -outlineSize/4.0f, 0, 0 }, outlineSize/2, outlineSize, outlineSize, BLUE);
+                else DrawCubeWires((Vector3){ 0, 0, 0 }, outlineSize, outlineSize, outlineSize, BLUE);
+            }
+        EndMode3D();
+        if (drawBar) {
+            drawLeftBar(drawBounds, showHalf, paused, drawMode, tickMode, cameraLat, cameraLon, updateSpeed);
+        }
+    EndDrawing();
+}
+
+
 int main(void) {
 
     srand(time(NULL));
@@ -575,6 +585,7 @@ int main(void) {
     bool paused = false;
     bool drawBounds = false;
     bool showHalf = false;
+    bool drawBar = true;
     DrawMode drawMode = DUAL_COLOR;
     TickMode tickMode = FAST;
 
@@ -586,6 +597,7 @@ int main(void) {
     ToggleKey cTK;
     ToggleKey mTK;
     ToggleKey uTK;
+    ToggleKey pTK;
 
     int updateSpeed = 8;
     float frame = 0;
@@ -620,7 +632,8 @@ int main(void) {
         if (zTK.down(IsKeyDown('Z') && tickMode == MANUAL && updateSpeed > 1)) updateSpeed--;
         if (cTK.down(IsKeyDown('C'))) showHalf = !showHalf;
         if (mTK.down(IsKeyDown('M'))) drawMode = (DrawMode)((drawMode + 1) % 5);
-        if (uTK.down(IsKeyDown('U'))) tickMode = (TickMode)((tickMode + 1) % 3);;
+        if (uTK.down(IsKeyDown('U'))) tickMode = (TickMode)((tickMode + 1) % 3);
+        if (pTK.down(IsKeyDown('P'))) drawBar = !drawBar;
         if (IsKeyDown(KEY_SPACE)) {
             cameraLat = 20.0f;
             cameraLon = 20.0f;
@@ -652,26 +665,14 @@ int main(void) {
 
             cells2 = vector<Cell>(cells);
             thread updateThread(updateCells, std::ref(cells2));
-            
-            BeginDrawing();
-                ClearBackground(RAYWHITE);
-                BeginMode3D(camera);
-                    drawCells(cells, drawBounds, showHalf, drawMode);
-                EndMode3D();
-                drawLeftBar(drawBounds, showHalf, paused, drawMode, tickMode, cameraLat, cameraLon, updateSpeed);
-            EndDrawing();
+
+            draw(camera,cells, drawBounds, drawBar, showHalf, paused, drawMode, tickMode, cameraLat, cameraLon, updateSpeed);
 
             updateThread.join();
             cells = vector<Cell>(cells2);
         }
         else {
-            BeginDrawing();
-                ClearBackground(RAYWHITE);
-                BeginMode3D(camera);
-                    drawCells(cells, drawBounds, showHalf, drawMode);
-                EndMode3D();
-                drawLeftBar(drawBounds, showHalf, paused, drawMode, tickMode, cameraLat, cameraLon, updateSpeed);
-            EndDrawing();
+            draw(camera,cells, drawBounds, drawBar, showHalf, paused, drawMode, tickMode, cameraLat, cameraLon, updateSpeed);
         }
 
     }
