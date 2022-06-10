@@ -5,6 +5,8 @@
 #include <thread>
 #include <iostream>
 
+#include "json.hpp"
+
 using std::string;
 using std::vector;
 using std::thread;
