@@ -2,7 +2,7 @@
 #include <math.h>
 #include <time.h>
 #include <vector>
-#include<thread>
+#include <thread>
 #include <iostream>
 
 using namespace std;
@@ -10,8 +10,9 @@ using namespace std;
 #define PI 3.14159265358979323846f
 
 #define CELL_SIZE 1.0f
-#define CELL_BOUNDS 66
+#define CELL_BOUNDS 96 // must be divisible by THREADS
 #define aliveChanceOnSpawn 0.15f
+#define THREADS 8
 
 
 /*
@@ -294,8 +295,8 @@ bool validCellIndex(int x, int y, int z, const Vector3Int &offset) {
            z + offset.z >= 0 && z + offset.z < CELL_BOUNDS;
 }
 
-void updateNeighbors(vector<Cell> &cells, const Vector3Int offsets[], int totalOffsets) {
-    for (int x = 0; x < CELL_BOUNDS; x++) {
+void updateNeighbors(vector<Cell> &cells, int start, int end, const Vector3Int offsets[], int totalOffsets) {
+    for (int x = start; x < end; x++) {
         for (int y = 0; y < CELL_BOUNDS; y++) {
             for (int z = 0; z < CELL_BOUNDS; z++) {
                 int oneIdx = threeToOne(x, y, z);
@@ -313,47 +314,92 @@ void updateNeighbors(vector<Cell> &cells, const Vector3Int offsets[], int totalO
 }
 
 void updateCells(vector<Cell> &cells) {
+    Vector3Int offsets[26];
+    int totalOffsets;
     if (NEIGHBORHOODS == MOORE) {
-        const Vector3Int offsets[26] = {
-            { -1, -1, -1 },
-            { -1, -1, 0 },
-            { -1, -1, 1 },
-            { -1, 0, -1 },
-            { -1, 0, 0 },
-            { -1, 0, 1 },
-            { -1, 1, -1 },
-            { -1, 1, 0 },
-            { -1, 1, 1 },
-            { 0, -1, -1 },
-            { 0, -1, 0 },
-            { 0, -1, 1 },
-            { 0, 0, -1 },
-            { 0, 0, 1 },
-            { 0, 1, -1 },
-            { 0, 1, 0 },
-            { 0, 1, 1 },
-            { 1, -1, -1 },
-            { 1, -1, 0 },
-            { 1, -1, 1 },
-            { 1, 0, -1 },
-            { 1, 0, 0 },
-            { 1, 0, 1 },
-            { 1, 1, -1 },
-            { 1, 1, 0 },
-            { 1, 1, 1 },
-        };
-        updateNeighbors(cells, offsets, 26);
+        // const Vector3Int offsetsM[26] = {
+        //     { -1, -1, -1 },
+        //     { -1, -1, 0 },
+        //     { -1, -1, 1 },
+        //     { -1, 0, -1 },
+        //     { -1, 0, 0 },
+        //     { -1, 0, 1 },
+        //     { -1, 1, -1 },
+        //     { -1, 1, 0 },
+        //     { -1, 1, 1 },
+        //     { 0, -1, -1 },
+        //     { 0, -1, 0 },
+        //     { 0, -1, 1 },
+        //     { 0, 0, -1 },
+        //     { 0, 0, 1 },
+        //     { 0, 1, -1 },
+        //     { 0, 1, 0 },
+        //     { 0, 1, 1 },
+        //     { 1, -1, -1 },
+        //     { 1, -1, 0 },
+        //     { 1, -1, 1 },
+        //     { 1, 0, -1 },
+        //     { 1, 0, 0 },
+        //     { 1, 0, 1 },
+        //     { 1, 1, -1 },
+        //     { 1, 1, 0 },
+        //     { 1, 1, 1 }
+        // };
+        // idk how to hard set array so this was best I came up with
+        offsets[0] = { -1, -1, -1 };
+        offsets[1] = { -1, -1, 0 };
+        offsets[2] = { -1, -1, 1 };
+        offsets[3] = { -1, 0, -1 };
+        offsets[4] = { -1, 0, 0 };
+        offsets[5] = { -1, 0, 1 };
+        offsets[6] = { -1, 1, -1 };
+        offsets[7] = { -1, 1, 0 };
+        offsets[8] = { -1, 1, 1 };
+        offsets[9] = { 0, -1, -1 };
+        offsets[10] = { 0, -1, 0 };
+        offsets[11] = { 0, -1, 1 };
+        offsets[12] = { 0, 0, -1 };
+        offsets[13] = { 0, 0, 1 };
+        offsets[14] = { 0, 1, -1 };
+        offsets[15] = { 0, 1, 0 };
+        offsets[16] = { 0, 1, 1 };
+        offsets[17] = { 1, -1, -1 };
+        offsets[18] = { 1, -1, 0 };
+        offsets[19] = { 1, -1, 1 };
+        offsets[20] = { 1, 0, -1 };
+        offsets[21] = { 1, 0, 0 };
+        offsets[22] = { 1, 0, 1 };
+        offsets[23] = { 1, 1, -1 };
+        offsets[24] = { 1, 1, 0 };
+        offsets[25] = { 1, 1, 1 };
+        totalOffsets = 26;
     }
     else {
-        const Vector3Int offsets[] = {
-            { 1, 0, 0 },
-            { -1, 0, 0 },
-            { 0, 1, 0 },
-            { 0, -1, 0 },
-            { 0, 0, 1 },
-            { 0, 0, -1 }
-        };
-        updateNeighbors(cells, offsets, 6);
+        // const Vector3Int offsets[] = {
+        //     { 1, 0, 0 },
+        //     { -1, 0, 0 },
+        //     { 0, 1, 0 },
+        //     { 0, -1, 0 },
+        //     { 0, 0, 1 },
+        //     { 0, 0, -1 }
+        // };
+        offsets[0] = { 1, 0, 0 };
+        offsets[1] = { -1, 0, 0 };
+        offsets[2] = { 0, 1, 0 };
+        offsets[3] = { 0, -1, 0 };
+        offsets[4] = { 0, 0, 1 };
+        offsets[5] = { 0, 0, -1 };
+        totalOffsets = 6;
+    }
+
+    thread threads[THREADS];
+    for (int i = 0; i < THREADS; i++) {
+        int start = i * CELL_BOUNDS / THREADS;
+        int end = (i + 1) * CELL_BOUNDS / THREADS;
+        threads[i] = thread(updateNeighbors, ref(cells), start, end, offsets, totalOffsets);
+    }
+    for (int i = 0; i < THREADS; i++) {
+        threads[i].join();
     }
 }
 
