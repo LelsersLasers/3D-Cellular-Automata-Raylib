@@ -14,7 +14,9 @@
 - Shaders to make cells eaiser to see?
 
 - Cleaning:
-    - Where can use branchless?
+    - 'size_t' to index
+    - not use std namespace
+    - Where can use branchless? Is it faster?
 
 - On demand changes for bound, cell rules, (colors, etc)
     - Maybe first load rules/settings from JSON file?
