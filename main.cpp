@@ -90,6 +90,7 @@ int cellBounds;
 size_t totalCells;
 float aliveChanceOnSpawn;
 size_t threads;
+int TargetFPS;
 
 const Color C1 = GREEN;
 const Color C2 = RED;
@@ -98,8 +99,6 @@ const Vector3 COLOR_OFFSET1 = {
     (float)(C1.g - C2.g),
     (float)(C1.b - C2.b)
 };
-
-const int TargetFPS = 8;
 
 
 class ToggleKey {
@@ -292,6 +291,7 @@ void setupFromJSON() {
         totalCells = cellBounds * cellBounds * cellBounds;
         aliveChanceOnSpawn = rules["aliveChanceOnSpawn"];
         threads = rules["threads"];
+        TargetFPS = rules["targetFPS"];
     }
     catch (std::exception& e) {
         std::cout << "Error: " << e.what() << std::endl;

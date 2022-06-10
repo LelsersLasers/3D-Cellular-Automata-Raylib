@@ -7,5 +7,6 @@
     "cellSize": 1.0,
     "cellBounds": 96,
     "aliveChanceOnSpawn": 0.15,
-    "threads": 8
+    "threads": 8,
+    "targetFPS": 15
 }
