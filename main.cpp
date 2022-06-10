@@ -48,11 +48,6 @@ using json = nlohmann::json;
 
 #define PI 3.14159265358979323846f
 
-#define CELL_SIZE 1.0f
-#define CELL_BOUNDS 96 // cleaner if divisible by THREADS
-#define TOTAL_CELLS 884736
-#define aliveChanceOnSpawn 0.15f
-#define THREADS 8
 #define JSON_FILE "rules.json"
 
 enum NeighborType {
@@ -89,6 +84,12 @@ bool SURVIVAL[27];
 bool SPAWN[27];
 int STATE;
 NeighborType NEIGHBORHOODS;
+
+float cellSize;
+int cellBounds;
+size_t totalCells;
+float aliveChanceOnSpawn;
+size_t threads;
 
 const Color C1 = GREEN;
 const Color C2 = RED;
@@ -147,14 +148,14 @@ private:
     Vector3Int index;
     int hp;
     size_t neighbors = 0;
-    void draw(Color color) const { DrawCube(pos, CELL_SIZE, CELL_SIZE, CELL_SIZE, color); }
+    void draw(Color color) const { DrawCube(pos, cellSize, cellSize, cellSize, color); }
 public:
     Cell(Vector3Int index) {
         this->index = index;
         pos = {
-            CELL_SIZE * (index.x - (CELL_BOUNDS - 1.0f) / 2),
-            CELL_SIZE * (index.y - (CELL_BOUNDS - 1.0f) / 2),
-            CELL_SIZE * (index.z - (CELL_BOUNDS - 1.0f) / 2)
+            cellSize * (index.x - (cellBounds - 1.0f) / 2),
+            cellSize * (index.y - (cellBounds - 1.0f) / 2),
+            cellSize * (index.z - (cellBounds - 1.0f) / 2)
         };
     }
     void clearNeighbors() { neighbors = 0; }
@@ -221,9 +222,9 @@ public:
     void drawRGBCube() const {
         if (state != DEAD) {
             draw((Color){
-                (unsigned char)((float)index.x/CELL_BOUNDS * 255),
-                (unsigned char)((float)index.y/CELL_BOUNDS * 255),
-                (unsigned char)((float)index.z/CELL_BOUNDS * 255),
+                (unsigned char)((float)index.x/cellBounds * 255),
+                (unsigned char)((float)index.y/cellBounds * 255),
+                (unsigned char)((float)index.z/cellBounds * 255),
                 255
             });
         }
@@ -231,7 +232,7 @@ public:
     void drawDist() const {
         if (state != DEAD) {
             float x = 3.0f;
-            int cap = CELL_BOUNDS/2;
+            int cap = cellBounds/2;
             float dist = calc_distance(index, { cap, cap, cap });
             float base = x/(cap * sqrt(3.0f) + x);
             float percent = dist/(cap * sqrt(3.0f) + x);
@@ -285,6 +286,12 @@ void setupFromJSON() {
         STATE = rules["state"];
         if (rules["neighborhood"] == "VN") NEIGHBORHOODS = VON_NEUMANN;
         else NEIGHBORHOODS = MOORE;
+
+        cellSize = rules["cellSize"];
+        cellBounds = rules["cellBounds"];
+        totalCells = cellBounds * cellBounds * cellBounds;
+        aliveChanceOnSpawn = rules["aliveChanceOnSpawn"];
+        threads = rules["threads"];
     }
     catch (std::exception& e) {
         std::cout << "Error: " << e.what() << std::endl;
@@ -300,14 +307,14 @@ float degreesToRadians(float degrees) {
 }
 
 size_t threeToOne(int x, int y, int z) {
-    return x * CELL_BOUNDS * CELL_BOUNDS + y * CELL_BOUNDS  + z;
+    return x * cellBounds * cellBounds + y * cellBounds  + z;
 }
 
 
 bool validCellIndex(int x, int y, int z, const Vector3Int &offset) {
-    return x + offset.x >= 0 && x + offset.x < CELL_BOUNDS &&
-           y + offset.y >= 0 && y + offset.y < CELL_BOUNDS &&
-           z + offset.z >= 0 && z + offset.z < CELL_BOUNDS;
+    return x + offset.x >= 0 && x + offset.x < cellBounds &&
+           y + offset.y >= 0 && y + offset.y < cellBounds &&
+           z + offset.z >= 0 && z + offset.z < cellBounds;
 }
 
 void syncCells(vector<Cell> &cells, size_t start, size_t end) {
@@ -318,8 +325,8 @@ void syncCells(vector<Cell> &cells, size_t start, size_t end) {
 
 void updateNeighbors(vector<Cell> &cells, int start, int end, const Vector3Int offsets[], size_t totalOffsets) {
     for (int x = start; x < end; x++) {
-        for (int y = 0; y < CELL_BOUNDS; y++) {
-            for (int z = 0; z < CELL_BOUNDS; z++) {
+        for (int y = 0; y < cellBounds; y++) {
+            for (int z = 0; z < cellBounds; z++) {
                 int oneIdx = threeToOne(x, y, z);
                 cells[oneIdx].clearNeighbors();
                 for (size_t i = 0; i < totalOffsets; i++) {
@@ -413,72 +420,72 @@ void updateCells(vector<Cell> &cells) {
         totalOffsets = 6;
     }
 
-    thread neighborThreads[THREADS];
-    for (size_t i = 0; i < THREADS; i++) {
-        int start = i * CELL_BOUNDS / THREADS;
-        int end = (i + 1) * CELL_BOUNDS / THREADS;
+    thread neighborThreads[threads];
+    for (size_t i = 0; i < threads; i++) {
+        int start = i * cellBounds / threads;
+        int end = (i + 1) * cellBounds / threads;
         neighborThreads[i] = thread(updateNeighbors, std::ref(cells), start, end, offsets, totalOffsets);
     }
-    for (size_t i = 0; i < THREADS; i++) {
+    for (size_t i = 0; i < threads; i++) {
         neighborThreads[i].join();
     }
 
-    thread syncThreads[THREADS];
-    for (size_t i = 0; i < THREADS; i++) {
-        size_t start = i * TOTAL_CELLS / THREADS;
-        size_t end = (i + 1) * TOTAL_CELLS / THREADS;
+    thread syncThreads[threads];
+    for (size_t i = 0; i < threads; i++) {
+        size_t start = i * totalCells / threads;
+        size_t end = (i + 1) * totalCells / threads;
         syncThreads[i] = thread(syncCells, std::ref(cells), start, end);
     }
-    for (size_t i = 0; i < THREADS; i++) {
+    for (size_t i = 0; i < threads; i++) {
         syncThreads[i].join();
     }
 }
 
 
 void drawCells(const vector<Cell> &cells, int divisor, DrawMode drawMode) {
-    // A bit exessive to put this outside, but is saves doing CELL_BOUNDS^3 extra checks
+    // A bit exessive to put this outside, but is saves doing cellBounds^3 extra checks
     // at the cost of extra code
     switch (drawMode) {
         case DUAL_COLOR:
-            for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
-                for (int y = 0; y < CELL_BOUNDS; y++) {
-                    for (int z = 0; z < CELL_BOUNDS; z++) {
+            for (int x = 0; x < cellBounds/divisor; x++) {
+                for (int y = 0; y < cellBounds; y++) {
+                    for (int z = 0; z < cellBounds; z++) {
                         cells[threeToOne(x, y, z)].drawDualColor();
                     }
                 }
             }
             break;
         case DUAL_COLOR_DYING:
-            for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
-                for (int y = 0; y < CELL_BOUNDS; y++) {
-                    for (int z = 0; z < CELL_BOUNDS; z++) {
+            for (int x = 0; x < cellBounds/divisor; x++) {
+                for (int y = 0; y < cellBounds; y++) {
+                    for (int z = 0; z < cellBounds; z++) {
                         cells[threeToOne(x, y, z)].drawDualColorDying();
                     }
                 }
             }
             break;
         case SINGLE_COLOR:
-            for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
-                for (int y = 0; y < CELL_BOUNDS; y++) {
-                    for (int z = 0; z < CELL_BOUNDS; z++) {
+            for (int x = 0; x < cellBounds/divisor; x++) {
+                for (int y = 0; y < cellBounds; y++) {
+                    for (int z = 0; z < cellBounds; z++) {
                         cells[threeToOne(x, y, z)].drawSingleColor();
                     }
                 }
             }
             break;
         case RGB_CUBE:
-            for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
-                for (int y = 0; y < CELL_BOUNDS; y++) {
-                    for (int z = 0; z < CELL_BOUNDS; z++) {
+            for (int x = 0; x < cellBounds/divisor; x++) {
+                for (int y = 0; y < cellBounds; y++) {
+                    for (int z = 0; z < cellBounds; z++) {
                         cells[threeToOne(x, y, z)].drawRGBCube();
                     }
                 }
             }
             break;
         case CENTER_DIST:
-            for (int x = 0; x < CELL_BOUNDS/divisor; x++) {
-                for (int y = 0; y < CELL_BOUNDS; y++) {
-                    for (int z = 0; z < CELL_BOUNDS; z++) {
+            for (int x = 0; x < cellBounds/divisor; x++) {
+                for (int y = 0; y < cellBounds; y++) {
+                    for (int z = 0; z < cellBounds; z++) {
                         cells[threeToOne(x, y, z)].drawDist();
                     }
                 }
@@ -489,12 +496,12 @@ void drawCells(const vector<Cell> &cells, int divisor, DrawMode drawMode) {
 
 
 void randomizeCells(vector<Cell> &cells) {
-    for (size_t i = 0; i < TOTAL_CELLS; i++) {
+    for (size_t i = 0; i < totalCells; i++) {
         cells[i].reset();
     }
-    for (int x = CELL_BOUNDS/3.0f; x < CELL_BOUNDS * 2.0f/3.0f; x++) {
-        for (int y = CELL_BOUNDS/3.0f; y < CELL_BOUNDS * 2.0f/3.0f; y++) {
-            for (int z = CELL_BOUNDS/3.0f; z < CELL_BOUNDS * 2.0f/3.0f; z++) {
+    for (int x = cellBounds/3.0f; x < cellBounds * 2.0f/3.0f; x++) {
+        for (int y = cellBounds/3.0f; y < cellBounds * 2.0f/3.0f; y++) {
+            for (int z = cellBounds/3.0f; z < cellBounds * 2.0f/3.0f; z++) {
                 cells[threeToOne(x, y, z)].randomizeState();
             }
         }
@@ -538,8 +545,8 @@ void drawLeftBar(bool drawBounds, bool showHalf, bool paused, DrawMode drawMode,
         DrawableText("Simulation Info:"),
         DrawableText("- FPS: " + std::to_string(GetFPS())),
         DrawableText("- Ticks per sec: " + std::to_string(tickMode == FAST ? GetFPS() : updateSpeed)),
-        DrawableText("- Bound size: " + std::to_string(CELL_BOUNDS)),
-        DrawableText("- Threads: " + std::to_string(THREADS) + " (+ 2)"),
+        DrawableText("- Bound size: " + std::to_string(cellBounds)),
+        DrawableText("- threads: " + std::to_string(threads) + " (+ 2)"),
         DrawableText("- Camera pos: " + std::to_string((int)abs(cameraLat)) + dirs[0] + ", " + std::to_string(abs((int)cameraLon)) + dirs[1]),
 
         DrawableText("Rules:"),
@@ -567,7 +574,7 @@ void draw(Camera3D camera, const vector<Cell> &cells, bool drawBounds, bool draw
             drawCells(cells, (int)showHalf + 1, drawMode);
 
             if (drawBounds) {
-                int outlineSize = CELL_SIZE * CELL_BOUNDS;
+                int outlineSize = cellSize * cellBounds;
                 if (showHalf) DrawCubeWires((Vector3){ -outlineSize/4.0f, 0, 0 }, outlineSize/2, outlineSize, outlineSize, BLUE);
                 else DrawCubeWires((Vector3){ 0, 0, 0 }, outlineSize, outlineSize, outlineSize, BLUE);
             }
@@ -600,9 +607,9 @@ int main(void) {
 
     float cameraLat = 20.0f;
     float cameraLon = 20.0f;
-    float cameraRadius = 1.75f * CELL_SIZE * CELL_BOUNDS;
+    float cameraRadius = 1.75f * cellSize * cellBounds;
     const float cameraMoveSpeed = 180.0f/4.0f;
-    const float cameraZoomSpeed = CELL_SIZE * CELL_BOUNDS/10.0f;
+    const float cameraZoomSpeed = cellSize * cellBounds/10.0f;
 
     bool paused = false;
     bool drawBounds = false;
@@ -626,16 +633,16 @@ int main(void) {
     float frame = 0;
 
     vector<Cell> cells;
-    for (int x = 0; x < CELL_BOUNDS; x++) {
-        for (int y = 0; y < CELL_BOUNDS; y++) {
-            for (int z = 0; z < CELL_BOUNDS; z++) {
+    for (int x = 0; x < cellBounds; x++) {
+        for (int y = 0; y < cellBounds; y++) {
+            for (int z = 0; z < cellBounds; z++) {
                 cells.push_back(Cell({ x, y, z }));
             }
         }
     }
     randomizeCells(cells);
     vector<Cell> cells2 = cells;
-    cells2.reserve(TOTAL_CELLS);
+    cells2.reserve(totalCells);
 
     // Main game loop
     while (!WindowShouldClose()) {
@@ -661,7 +668,7 @@ int main(void) {
         if (IsKeyDown(KEY_SPACE)) {
             cameraLat = 20.0f;
             cameraLon = 20.0f;
-            cameraRadius = 1.75f * CELL_SIZE * CELL_BOUNDS;
+            cameraRadius = 1.75f * cellSize * cellBounds;
         }
         if (enterTK.down(IsKeyPressed(KEY_ENTER))) {
             if (GetScreenWidth() == screenWidth) MaximizeWindow();
@@ -683,7 +690,7 @@ int main(void) {
         if (cameraLon > 180) cameraLon -= 360;
         else if (cameraLon < -180) cameraLon += 360;
 
-        if (cameraRadius < CELL_SIZE) cameraRadius = CELL_SIZE;
+        if (cameraRadius < cellSize) cameraRadius = cellSize;
         camera.position = (Vector3){
             cameraRadius * cos(degreesToRadians(cameraLat)) * cos(degreesToRadians(cameraLon)),
             cameraRadius * cos(degreesToRadians(cameraLat)) * sin(degreesToRadians(cameraLon)),

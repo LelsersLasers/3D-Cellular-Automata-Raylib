@@ -36,7 +36,6 @@
     - Where can use branchless? Is it faster?
 
 - On demand changes for bound, cell rules, (colors, etc)
-    - Maybe first load rules/settings from JSON file?
 - Menu screens etc?
 - Calc on GPU?
 - Shaders to make cells eaiser to see?
