@@ -30,7 +30,6 @@
 
 
 - Cleaning:
-    - 'size_t' to index
     - 'hard set' offsets in updateCells()
     - Where can use branchless? Is it faster?
 

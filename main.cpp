@@ -65,14 +65,14 @@ bool SURVIVAL[27];
 bool SPAWN[27];
 
 // My rules 9-18/5-7,12-13,15/6/M
-// const int survival_numbers[] = { 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 };
-// const int spawn_numbers[] = { 5, 6, 7, 12, 13, 15 };
+// const size_t survival_numbers[] = { 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 };
+// const size_t spawn_numbers[] = { 5, 6, 7, 12, 13, 15 };
 // const int STATE = 6;
 // const NeighborType NEIGHBORHOODS = MOORE;
 
 // Builder 1 (Jason Rampe) 2,6,9/4,6,8-9/10/M
-const int survival_numbers[] = { 2, 6, 9 };
-const int spawn_numbers[] = { 4, 6, 8, 9 };
+const size_t survival_numbers[] = { 2, 6, 9 };
+const size_t spawn_numbers[] = { 4, 6, 8, 9 };
 const int STATE = 10;
 const NeighborType NEIGHBORHOODS = MOORE;
 
@@ -140,7 +140,7 @@ private:
     Vector3 pos;
     Vector3Int index;
     int hp;
-    int neighbors = 0;
+    size_t neighbors = 0;
     void draw(Color color) const { DrawCube(pos, CELL_SIZE, CELL_SIZE, CELL_SIZE, color); }
 public:
     Cell(Vector3Int index) {
@@ -272,10 +272,10 @@ string textFromEnum(TickMode tm) {
 
 
 void setupBoolArrays() {
-    for (int value : survival_numbers) {
+    for (size_t value : survival_numbers) {
         SURVIVAL[value] = true;
     }
-    for (int value : spawn_numbers) {
+    for (size_t value : spawn_numbers) {
         SPAWN[value] = true;
     }
 }
@@ -284,7 +284,7 @@ float degreesToRadians(float degrees) {
     return degrees * PI / 180.0f;
 }
 
-int threeToOne(int x, int y, int z) {
+size_t threeToOne(int x, int y, int z) {
     return x * CELL_BOUNDS * CELL_BOUNDS + y * CELL_BOUNDS  + z;
 }
 
@@ -295,19 +295,19 @@ bool validCellIndex(int x, int y, int z, const Vector3Int &offset) {
            z + offset.z >= 0 && z + offset.z < CELL_BOUNDS;
 }
 
-void syncCells(vector<Cell> &cells, int start, int end) {
-    for (int i = start; i < end; i++) {
+void syncCells(vector<Cell> &cells, size_t start, size_t end) {
+    for (size_t i = start; i < end; i++) {
         cells[i].sync();
     }
 }
 
-void updateNeighbors(vector<Cell> &cells, int start, int end, const Vector3Int offsets[], int totalOffsets) {
+void updateNeighbors(vector<Cell> &cells, int start, int end, const Vector3Int offsets[], size_t totalOffsets) {
     for (int x = start; x < end; x++) {
         for (int y = 0; y < CELL_BOUNDS; y++) {
             for (int z = 0; z < CELL_BOUNDS; z++) {
                 int oneIdx = threeToOne(x, y, z);
                 cells[oneIdx].clearNeighbors();
-                for (int i = 0; i < totalOffsets; i++) {
+                for (size_t i = 0; i < totalOffsets; i++) {
                     if (validCellIndex(x, y, z, offsets[i])) {
                         cells[oneIdx]
                             .addNeighbor(cells[threeToOne(x + offsets[i].x, y + offsets[i].y, z + offsets[i].z)]
@@ -321,7 +321,7 @@ void updateNeighbors(vector<Cell> &cells, int start, int end, const Vector3Int o
 
 void updateCells(vector<Cell> &cells) {
     Vector3Int offsets[26];
-    int totalOffsets;
+    size_t totalOffsets;
     if (NEIGHBORHOODS == MOORE) {
         // const Vector3Int offsetsM[26] = {
         //     { -1, -1, -1 },
@@ -399,23 +399,23 @@ void updateCells(vector<Cell> &cells) {
     }
 
     thread neighborThreads[THREADS];
-    for (int i = 0; i < THREADS; i++) {
+    for (size_t i = 0; i < THREADS; i++) {
         int start = i * CELL_BOUNDS / THREADS;
         int end = (i + 1) * CELL_BOUNDS / THREADS;
         neighborThreads[i] = thread(updateNeighbors, std::ref(cells), start, end, offsets, totalOffsets);
     }
-    for (int i = 0; i < THREADS; i++) {
+    for (size_t i = 0; i < THREADS; i++) {
         neighborThreads[i].join();
     }
 
     thread syncThreads[THREADS];
     int totalCells = CELL_BOUNDS * CELL_BOUNDS * CELL_BOUNDS;
-    for (int i = 0; i < THREADS; i++) {
-        int start = i * totalCells / THREADS;
-        int end = (i + 1) * totalCells / THREADS;
+    for (size_t i = 0; i < THREADS; i++) {
+        size_t start = i * totalCells / THREADS;
+        size_t end = (i + 1) * totalCells / THREADS;
         syncThreads[i] = thread(syncCells, std::ref(cells), start, end);
     }
-    for (int i = 0; i < THREADS; i++) {
+    for (size_t i = 0; i < THREADS; i++) {
         syncThreads[i].join();
     }
 }
@@ -485,7 +485,7 @@ void drawCells(vector<Cell> &cells, bool drawBounds, bool showHalf, DrawMode dra
 
 
 void randomizeCells(vector<Cell> &cells) {
-    for (int i = 0; i < CELL_BOUNDS * CELL_BOUNDS * CELL_BOUNDS; i++) {
+    for (size_t i = 0; i < CELL_BOUNDS * CELL_BOUNDS * CELL_BOUNDS; i++) {
         cells[i].randomizeState();
     }
 }
@@ -498,12 +498,12 @@ void drawLeftBar(bool drawBounds, bool showHalf, bool paused, DrawMode drawMode,
     };
 
     string survivalText = "- Survive:";
-    for (int i = 0; i < 27; i++) {
+    for (size_t i = 0; i < 27; i++) {
         if (SURVIVAL[i]) survivalText += " " + std::to_string(i);
     }
 
     string spawnText = "- Spawn:";
-    for (int i = 0; i < 27; i++) {
+    for (size_t i = 0; i < 27; i++) {
         if (SPAWN[i]) spawnText += " " + std::to_string(i);
     }
 
@@ -536,12 +536,12 @@ void drawLeftBar(bool drawBounds, bool showHalf, bool paused, DrawMode drawMode,
         DrawableText("- Neighborhood: " + textFromEnum(NEIGHBORHOODS)),
     };
 
-    const int lenTexts = sizeof(dts) / sizeof(dts[0]);
+    const size_t lenTexts = sizeof(dts) / sizeof(dts[0]);
 
     DrawRectangle(10, 10, 290, lenTexts * 14 + 7, Fade(SKYBLUE, 0.5f));
     DrawRectangleLines(10, 10, 290, lenTexts * 14 + 7, BLUE);
 
-    for (int i = 0; i < lenTexts; i++) {
+    for (size_t i = 0; i < lenTexts; i++) {
         dts[i].draw(i);
     }
 }
