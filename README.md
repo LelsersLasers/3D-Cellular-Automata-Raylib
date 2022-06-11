@@ -21,6 +21,9 @@ GIF
         - [targetFPS](#targetfps)
 - [Simulation](#simulation)
     - [Controls](#controls)
+        - [Camera controls](#camera-controls)
+        - [Window controls](#window-controls)
+        - [Simulation controls](#simulation-controls)
     - [Draw modes](#draw-modes)
     - [Tick modes](#tick-modes)
     - [Other info](#other-info)
@@ -106,7 +109,7 @@ The simulation loads the settings from the file when it is started, so the simul
 ### Rules JSON
 
 The first 4 keys are the rules for the simulation.
-The explainations for these rules are above (as well as their types).
+The explainations for these rules are [above](#cell-rules-explained) (as well as their types).
 
 ### Settings
 
@@ -153,6 +156,40 @@ Defaults:
 ## Simulation
 
 ### CONTROLS
+
+#### Camera controls:
+- Q/E : zoom in/out
+- W/S : rotate camera up/down
+- A/D : rotate camera left/right
+- Space : reset camera
+- The camera works on latitude/longitude system where W/A/S/D cause the camera to orbit the simulation
+- Note: can also use the arrow keys instead W/A/S/D and page up/down to zoom in/out
+- Camera movement is relative to the delta time between frames
+
+#### Window controls:
+- Enter : toggle fullscreen
+- O : toggle true fullscreen
+    - The Raylib implementation of fullscreen is not garenteed to scale correctly
+    - Using Enter is highly recommended
+
+#### Simulation controls
+- R : re-randomize cells
+    - See [aliveChanceOnSpawn](#alivechanceonspawn) for more info
+- B : show/hide bounds
+    - Draws a blue outline of the simulation bounds
+- P : show/hide left bar
+- C : toggle cross section view
+    - Shows just half the simulation
+    - Useful for seeing the center/core as it grows
+    - Note: the hidden cells still update, they are just not rendered
+- Mouse click : pause/unpause
+    - Simply stops the game ticks
+    - All other controls are still available
+- M : change between draw modes
+    - See [draw modes](#draw-modes) for more info
+- U : change between tick modes
+    - See [tick modes](#draw-modes) for more info
+- X/Z : if the tick mode is manual: increase/decrease tick speed
 
 ### DRAW MODES
 

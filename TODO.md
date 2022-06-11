@@ -1,6 +1,7 @@
 # TODO
 
-Key bind to reload from JSON
+Key bind to reload from JSON?
+- Would have to reset a lot of things
 
 
 Cleaning:
