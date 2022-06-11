@@ -24,6 +24,6 @@ Possible/advanced/likely won't happen ideas
 
 Non-code:
 - Readme
-    - fit the game of life repo somewhere in it
+    - spelling
 - showcases, json "comment", explainantion of rules, etc
 - Organize into multiple files?

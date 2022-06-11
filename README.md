@@ -1,6 +1,6 @@
 # 3D Cellular Automata [Raylib/C++]
 
-GIF
+TODO: GIF
 
 
 - [Why I did this project](#why-i-did-this-project)
@@ -25,15 +25,29 @@ GIF
         - [Window controls](#window-controls)
         - [Simulation controls](#simulation-controls)
     - [Draw modes](#draw-modes)
+        - [Dual color](#dual-color)
+        - [RGB](#rgb)
+        - [Dual color dying](#dual-color-dying)
+        - [Single color](#single-color)
+        - [Distance from center](#distance-from-center)
     - [Tick modes](#tick-modes)
     - [Other info](#other-info)
 - [Showcase](#showcase)
 - [Optimizations](#optimizations)
+    - [Indexing over iteration](#indexing-over-iteration)
+    - [1 demensional vector](#1-demensional-over-3-demensional)
+    - [Branching at the highest level](#branching-at-the-highest-level)
+    - [Branchless programing](#branchless-programming)
+    - [Multithreading](#multithreading)
 - [Other](#other)
+
+
+TODO: download section with note about compiling
 
 
 ## Why I did this project
 
+TODO:
 Game of Life, etc
 
 
@@ -46,6 +60,7 @@ Game of Life, etc
 > 
 > &mdash; <cite>Wikipedia</cite>
 
+TODO:?
 PERSONAL/HUMAN DEFINTION
 
 
@@ -71,9 +86,6 @@ A cell can be in one of 3 state types: alive, dead, dying.
     - Must be a single number (ex: 6)
 - Once a cell begins dying, it has X game ticks to live before disappearing
 - Both survival and spawn rules will no longer affect the cell while it decays
-- Note:
-    - The way the cell colors are calculated makes seeing low state numbers (< 3) hard
-    - But the simulation still works/runs
 
 ### Neighborhoods
 - "M" or "VN"
@@ -148,14 +160,16 @@ Defaults:
 - Type: int
 
 #### targetFPS
-- Used for dynamic tick mode
-- See the section below for more info
+- Used for [dynamic tick mode](#dynamic)
+    - See the section below for more info
 - Type: int
 
 
 ## Simulation
 
 ### CONTROLS
+
+Keyboard and mouse inputs are only checked once per frame. So on lower FPS, the controls will be less responsive.
 
 #### Camera controls:
 - Q/E : zoom in/out
@@ -189,21 +203,204 @@ Defaults:
     - See [draw modes](#draw-modes) for more info
 - U : change between tick modes
     - See [tick modes](#draw-modes) for more info
-- X/Z : if the tick mode is manual: increase/decrease tick speed
+- X/Z : if the tick mode is [manual](#manual): increase/decrease tick speed
 
-### DRAW MODES
+### Draw modes
+
+```
+enum DrawMode {
+    DUAL_COLOR = 0,
+    RGB_CUBE = 1,
+    DUAL_COLOR_DYING = 2,
+    SINGLE_COLOR = 3,
+    CENTER_DIST = 4
+};
+```
+
+#### Dual color
+
+TODO:image
+
+- Displays the cell's state as a color from green to red
+- Green = alive
+- Anything else: dying
+    - Closer to green = more time to live
+    - Closer to red = closer to dead
+
+#### RGB
+
+TODO:image
+
+- Maps the cell's posistion to a color
+    - X * K = red intensity, Y * K = green, Z * K = blue
+- Because there is no shading, it is hard to tell the difference between cells
+    - This draw mode makes it easier to see the cells as each cell is (slightly) different color at the cost of not displaying the cell's state
+
+#### Dual color dying
+
+TODO:image
+
+- Alive = red
+- Dying = scales from white to black based on how close the cell is to dead
+- Easiest to see the difference between alive and dead cells at the cost of your eyes
+
+#### Single color
+
+TODO:image
+
+- Like dual color, but instead of scaling from green to red, it scales from red to dark red/black
+
+#### Distance from center
+
+TODO:image
+
+- A scale of how far each cell is from the center of the simulation from black to white
+- Like RGB, it is easier to see the difference between cells at the cost of not displaying the cell's state
 
 ### TICK MODES
 
-### OTHER INFO
+```
+enum TickMode {
+    FAST = 0,
+    DYNAMIC = 1,
+    MANUAL = 2
+};
+```
 
+#### Fast
+- The simulation progresses one tick forward per frame
+- The speed is often limited by the rendering of the cells, so the simulation tick speed and frame rate will decrease as more cells are rendered
+
+#### Dynamic
+- Tries to progress the simulation as fast as possible while keeping the simulation running above the [target FPS](#targetfps)
+- Does this by alternating between based on the current FPS:
+    1) updating the cells and drawing them
+    2) just drawing the cells
+- If the time between the last update was more than 1/desiredUpdateSpeed, it will run 1, else it will run 2
+- Drawing the cells is still slow, so it might just end up as 1 tick per second on higher bounds
+
+#### Manual
+- Increase/decrease ticks per second with X/Z
+- Increasing above the current FPS effectively makes the simulation run as if it was on Fast
+- It works the same way as dynamic (alternating between updating and drawing and just drawing based on time between updates)
+
+### OTHER INFO
+TODO:?
 
 ## Showcase
 
+TODO:
 
 ## Optimization
-- things already done
-- multithreading
+
+The simulation is optimized for speed, but it still can be slow on higher bounds.
+I have made it as fast as I can, but I am sure there are ways to make it faster.
+
+### Indexing over iteration
+
+Before, to see if a dead cell should come I alive I had to do this:
+```
+for (int value : spawnNumbers) {
+    if (neighbors == value) {
+        state = ALIVE;
+        break;
+    }
+}
+```
+However, I could replace the array of spawnNumbers with an array of booleans where the index is the spawn number.
+Then I could just do:
+```
+if (spawn[neighbors]) state = ALIVE;
+```
+It was hard to edit the rules when it was a boolean array, but it was easy to convert a list of spawn numbers to a boolean array like:
+```
+for (size_t value : rules["spawn"]) SPAWN[value] = true;
+```
+I did a similar thing for the survival numbers.
+
+
+### 1 demensional over 3 demensional
+
+Technically, there is no reason to use a vector over an array.
+However, I did it this way because later I might add the ability to change the cell bounds on demand.
+My understanding is that a vector and an array are the same speed except for allocating memory and I only have to do that at the start.
+
+However, before, I had a vector of vectors of vectors of cells:
+```
+vector<vector<vector<Cell>>> cells
+```
+After some googling, I found that accessing vectors of vectors (of vectors) is slow, because of the "indirection and lack of locality [which] quickly kills a lot of performance."
+To solve this problem, I made the cells a 1 demensional vector, and indexed with:
+```
+size_t threeToOne(int x, int y, int z) {
+    return x * cellBounds * cellBounds + y * cellBounds  + z;
+}
+```
+
+### Branching at the highest level
+
+Before, when doing the different draw modes, I simply went through all the cells and switched on the draw mode.
+Note: divisor is for the [cross section view](#simulation-controls)
+```
+for (int x = 0; x < cellBounds/divisor; x++) {
+    for (int y = 0; y < cellBounds; y++) {
+        for (int z = 0; z < cellBounds; z++) {
+            Color color;
+            switch (drawMode) {
+                case DUAL_COLOR:
+                    Color color = ....;
+                    break;
+                case RGB_CUBE:
+                    Color color = ....;
+                    break;
+                // reset of switches
+            }
+            cells[threeToOne(x, y, z)].draw(color);
+// appropriate closing paraenthese
+```
+However, this meant that it had to compare/branch on drawMode for every cell.
+Moving the switch outside of the for loop made it so that it only had to compare/branch once (at the code of repeated code).
+```
+switch (drawMode) {
+    case DUAL_COLOR:
+        for (int x = 0; x < cellBounds/divisor; x++) {
+            for (int y = 0; y < cellBounds; y++) {
+                for (int z = 0; z < cellBounds; z++) {
+                    cells[threeToOne(x, y, z)].drawDualColor();
+        // appropriate closing paraenthese
+        break;
+    case RGB_CUBE:
+        for (int x = 0; x < cellBounds/divisor; x++) {
+            for (int y = 0; y < cellBounds; y++) {
+                for (int z = 0; z < cellBounds; z++) {
+                    cells[threeToOne(x, y, z)].drawRGBCube();
+        // appropriate closing paraenthese
+        break;
+    // reset of switches
+
+```
+
+### Branchless programming
+
+I am not actually sure if this is faster. The only thing I really read was [this](https://dev.to/jobinrjohnson/branchless-programming-does-it-really-matter-20j4).
+The idea is that having branches (if/switch/conditional assignment/etc) is slower than just doing math.
+I am sure at what point this is true, but it seemed to speed up the simulation, so I just left it in.
+
+For example, I replaced (example from earlier): 
+```
+if (spawn[neighbors]) state = ALIVE;
+```
+With:
+```
+state = (State)((int)spawn[neighbors] * 2) // 2 because of the way the enum State was set up, alive = 2, dying = 1, dead = 0
+```
+Again, not really sure if it is better, and having the double cast is a bit of a hack, but it seems to work.
+
+TODO: is there any I forgot?
+
+
+### Multithreading
+
 
 
 ## Other
