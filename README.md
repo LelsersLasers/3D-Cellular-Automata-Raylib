@@ -336,6 +336,7 @@ size_t threeToOne(int x, int y, int z) {
     return x * cellBounds * cellBounds + y * cellBounds  + z;
 }
 ```
+It seemed to run faster when doing this extra calculation per cell than using a vector of vectors of vectors of cells.
 
 ### Branching at the highest level
 

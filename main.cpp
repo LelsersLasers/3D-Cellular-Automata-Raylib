@@ -136,17 +136,16 @@ public:
         neighbors = 0;
     }
     void randomizeState() {
-        state = (State)(((double)rand() / (double)RAND_MAX < aliveChanceOnSpawn) * 2);
-        state = (double)rand() / (double)RAND_MAX < aliveChanceOnSpawn ? ALIVE : DEAD;
-        hp = (int)(state/2.0f * STATE);
+        state = (State)(((double)rand() / (double)RAND_MAX < aliveChanceOnSpawn) * ALIVE);
+        hp = state/ALIVE * STATE;
     }
     void sync() {
         if (state == ALIVE) {
-            state = (State)((int)SURVIVAL[neighbors] + 1);
+            state = (State)((int)SURVIVAL[neighbors] + DYING);
         }
         else if (state == DEAD) {
-            state = (State)((int)SPAWN[neighbors] * 2);
-            hp = (int)(state/2.0f * STATE);
+            state = (State)((int)SPAWN[neighbors] * ALIVE);
+            hp = state/ALIVE * STATE;
         }
         if (state == DYING) { // do hp decay on same tick that it is demoted to dying
             if (--hp < 0) state = DEAD;
