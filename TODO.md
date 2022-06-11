@@ -1,5 +1,8 @@
 # TODO
 
+Key bind to reload from JSON
+
+
 Cleaning:
 - 'hard set' offsets in updateCells()
 - Where can use branchless? Is it faster?
