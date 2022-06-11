@@ -60,7 +60,7 @@ int cellBounds;
 size_t totalCells;
 float aliveChanceOnSpawn;
 size_t threads;
-int TargetFPS;
+int targetFPS;
 
 const Color C1 = GREEN;
 const Color C2 = RED;
@@ -254,7 +254,7 @@ void setupFromJSON() {
         totalCells = cellBounds * cellBounds * cellBounds;
         aliveChanceOnSpawn = rules["aliveChanceOnSpawn"];
         threads = rules["threads"];
-        TargetFPS = rules["targetFPS"];
+        targetFPS = rules["targetFPS"];
     }
     catch (std::exception& e) {
         std::cout << "Error: " << e.what() << std::endl;
@@ -662,8 +662,8 @@ int main(void) {
 
         if (!paused && (tickMode == FAST || frame >= 1.0f/updateSpeed)) {
             if (tickMode == DYNAMIC) {
-                if (GetFPS() > TargetFPS && updateSpeed < GetFPS()) updateSpeed++;
-                else if (GetFPS() < TargetFPS && updateSpeed > 1) updateSpeed--;
+                if (GetFPS() > targetFPS && updateSpeed < GetFPS()) updateSpeed++;
+                else if (GetFPS() < targetFPS && updateSpeed > 1) updateSpeed--;
             }
             while (tickMode != FAST && frame >= 1.0/updateSpeed) frame -= 1.0/updateSpeed;
 
