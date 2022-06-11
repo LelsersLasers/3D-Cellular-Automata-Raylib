@@ -402,10 +402,9 @@ With:
 else if (state == DEAD) {
     // the way enum State was set up: alive = 2, dying = 1, dead = 0
     // also makes use of implicit bool -> int conversion
-    state = (State)(SPAWN[neighbors] * ALIVE);
+    state = (State)(spawn[neighbors] * ALIVE);
     hp = state/ALIVE * STATE;
 }
-state = (State)(spawn[neighbors] * ALIVE); 
 ```
 Again, not really sure if it is better, and this code is still within a branch.
 
