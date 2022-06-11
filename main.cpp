@@ -27,8 +27,8 @@ enum NeighborType {
 
 enum State {
     ALIVE = 2,
-    DEAD = 0,
-    DYING = 1
+    DYING = 1,
+    DEAD = 0
 };
 
 enum DrawMode {
@@ -136,15 +136,16 @@ public:
         neighbors = 0;
     }
     void randomizeState() {
+        state = (State)(((double)rand() / (double)RAND_MAX < aliveChanceOnSpawn) * 2);
         state = (double)rand() / (double)RAND_MAX < aliveChanceOnSpawn ? ALIVE : DEAD;
         hp = (int)(state/2.0f * STATE);
     }
     void sync() {
         if (state == ALIVE) {
-            state = (State)((int)(SURVIVAL[neighbors]) + 1);
+            state = (State)((int)SURVIVAL[neighbors] + 1);
         }
         else if (state == DEAD) {
-            state = (State)((int)(SPAWN[neighbors]) * 2);
+            state = (State)((int)SPAWN[neighbors] * 2);
             hp = (int)(state/2.0f * STATE);
         }
         if (state == DYING) { // do hp decay on same tick that it is demoted to dying
@@ -157,6 +158,16 @@ public:
                 (unsigned char)(C2.r + COLOR_OFFSET1.x/(STATE + 1) * (hp + 1)),
                 (unsigned char)(C2.g + COLOR_OFFSET1.y/(STATE + 1) * (hp + 1)),
                 (unsigned char)(C2.b + COLOR_OFFSET1.z/(STATE + 1) * (hp + 1)),
+                255
+            });
+        }
+    }
+    void drawRGBCube() const {
+        if (state != DEAD) {
+            draw((Color){
+                (unsigned char)((float)index.x/cellBounds * 255),
+                (unsigned char)((float)index.y/cellBounds * 255),
+                (unsigned char)((float)index.z/cellBounds * 255),
                 255
             });
         }
@@ -179,16 +190,6 @@ public:
             float percent = hp/(STATE + x);
             unsigned char brightness = (int)((base + percent) * 255);
             draw((Color){ brightness, 20, 20, 255 });
-        }
-    }
-    void drawRGBCube() const {
-        if (state != DEAD) {
-            draw((Color){
-                (unsigned char)((float)index.x/cellBounds * 255),
-                (unsigned char)((float)index.y/cellBounds * 255),
-                (unsigned char)((float)index.z/cellBounds * 255),
-                255
-            });
         }
     }
     void drawDist() const {
@@ -215,9 +216,9 @@ string textFromEnum(NeighborType nt) {
 string textFromEnum(DrawMode dm) {
     switch (dm) {
         case DUAL_COLOR: return "Dual Color";
+        case RGB_CUBE: return "RGB";
         case DUAL_COLOR_DYING: return "Dual Color Dying";
         case SINGLE_COLOR: return "Single Color";
-        case RGB_CUBE: return "RGB";
         case CENTER_DIST: return "Center Dist";
     }
     return "";
@@ -418,6 +419,15 @@ void drawCells(const vector<Cell> &cells, int divisor, DrawMode drawMode) {
                 }
             }
             break;
+        case RGB_CUBE:
+            for (int x = 0; x < cellBounds/divisor; x++) {
+                for (int y = 0; y < cellBounds; y++) {
+                    for (int z = 0; z < cellBounds; z++) {
+                        cells[threeToOne(x, y, z)].drawRGBCube();
+                    }
+                }
+            }
+            break;
         case DUAL_COLOR_DYING:
             for (int x = 0; x < cellBounds/divisor; x++) {
                 for (int y = 0; y < cellBounds; y++) {
@@ -432,15 +442,6 @@ void drawCells(const vector<Cell> &cells, int divisor, DrawMode drawMode) {
                 for (int y = 0; y < cellBounds; y++) {
                     for (int z = 0; z < cellBounds; z++) {
                         cells[threeToOne(x, y, z)].drawSingleColor();
-                    }
-                }
-            }
-            break;
-        case RGB_CUBE:
-            for (int x = 0; x < cellBounds/divisor; x++) {
-                for (int y = 0; y < cellBounds; y++) {
-                    for (int z = 0; z < cellBounds; z++) {
-                        cells[threeToOne(x, y, z)].drawRGBCube();
                     }
                 }
             }
@@ -591,6 +592,7 @@ int main(void) {
     ToggleKey uTK;
     ToggleKey pTK;
     ToggleKey oTK;
+    // ToggleKey jTK;
 
     int updateSpeed = 8;
     float frame = 0;
@@ -628,6 +630,7 @@ int main(void) {
         if (mTK.down(IsKeyDown('M'))) drawMode = (DrawMode)((drawMode + 1) % 5);
         if (uTK.down(IsKeyDown('U'))) tickMode = (TickMode)((tickMode + 1) % 3);
         if (pTK.down(IsKeyDown('P'))) drawBar = !drawBar;
+        // if (jTK.down(IsKeyDown('J'))) setupFromJSON();
         if (IsKeyDown(KEY_SPACE)) {
             cameraLat = 20.0f;
             cameraLon = 20.0f;
