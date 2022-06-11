@@ -1,8 +1,6 @@
 # TODO
 
 Cleaning:
-- Is state done right?
-    - and fix '0' state?
 - 'hard set' offsets in updateCells()
 - Where can use branchless? Is it faster?
 

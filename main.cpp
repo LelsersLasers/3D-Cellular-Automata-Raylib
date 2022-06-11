@@ -112,10 +112,10 @@ float calc_distance(Vector3Int a, Vector3Int b) {
 
 class Cell {
 private:
-    State state;
+    State state = DEAD;
     Vector3 pos;
     Vector3Int index;
-    int hp;
+    int hp = 0;
     size_t neighbors = 0;
     void draw(Color color) const { DrawCube(pos, cellSize, cellSize, cellSize, color); }
 public:
@@ -140,30 +140,23 @@ public:
         hp = (int)(state/2.0f * STATE);
     }
     void sync() {
-        switch (state) {
-            case ALIVE:
-                // if (!SURVIVAL[neighbors]) state = DYING; // old
-                state = (State)((int)(SURVIVAL[neighbors]) + 1); // new
-                break;
-            case DEAD:
-                // if (SPAWN[neighbors]) { // old
-                //     state = ALIVE;
-                //     hp = STATE;
-                // }
-                state = (State)((int)(SPAWN[neighbors]) * 2);  // new
-                hp = (int)(state/2.0f * STATE);
-                break;
-            case DYING:
-                if (--hp == 0) state = DEAD;
-                break;
+        if (state == ALIVE) {
+            state = (State)((int)(SURVIVAL[neighbors]) + 1);
+        }
+        else if (state == DEAD) {
+            state = (State)((int)(SPAWN[neighbors]) * 2);
+            hp = (int)(state/2.0f * STATE);
+        }
+        if (state == DYING) { // do hp decay on same tick that it is demoted to dying
+            if (--hp < 0) state = DEAD;
         }
     }
     void drawDualColor() const {
         if (state != DEAD) {
             draw((Color){
-                (unsigned char)(C2.r + COLOR_OFFSET1.x/STATE * hp),
-                (unsigned char)(C2.g + COLOR_OFFSET1.y/STATE * hp),
-                (unsigned char)(C2.b + COLOR_OFFSET1.z/STATE * hp),
+                (unsigned char)(C2.r + COLOR_OFFSET1.x/(STATE + 1) * (hp + 1)),
+                (unsigned char)(C2.g + COLOR_OFFSET1.y/(STATE + 1) * (hp + 1)),
+                (unsigned char)(C2.b + COLOR_OFFSET1.z/(STATE + 1) * (hp + 1)),
                 255
             });
         }

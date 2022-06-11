@@ -32,6 +32,9 @@ A cell can be in one of 3 state types: alive, dead, dying.
     - Once a cell begins dying, it has C game ticks to live before disappearing
     - Both survival and spawn rules will no longer affect the cell while it decays
     - Must be a single number (ex: 6)
+    - Note:
+        - The way the cell colors are calculated makes seeing low state numbers (< 3) hard
+        - But the simulation still works/runs
 - Neighborhoods: "M" or "VN"
     - How neighbors are counted
     - "M": Moore: faces + counts diagonal neighbors, think rubics cube (3^3 - 1 = 26 possible neighbors)
@@ -42,7 +45,7 @@ A cell can be in one of 3 state types: alive, dead, dying.
     - The simulation must be restarted to see the changes
 
 Some examples (can just copy/replace in 'rules.json')
-- Slow build up: 9-18/5-7,12-13,15/6/M
+- Slow build up: <9-18/5-7,12-13,15/6/M>
     ```
     "survival": [9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
     "spawn": [5, 6, 7, 12, 13, 15],
