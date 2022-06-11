@@ -389,13 +389,25 @@ I am sure at what point this is true, but it seemed to speed up the simulation, 
 
 For example, I replaced (example from earlier): 
 ```
-if (spawn[neighbors]) state = ALIVE;
+else if (state == DEAD) {
+    if (spawn[neighbors]) {
+        state = ALIVE;
+        hp = STATE; // STATE is the amount of ticks the cell lives as defined in rules.json
+    }
+}
+
 ```
 With:
 ```
-state = (State)((int)spawn[neighbors] * 2) // 2 because of the way the enum State was set up, alive = 2, dying = 1, dead = 0
+else if (state == DEAD) {
+    // the way enum State was set up: alive = 2, dying = 1, dead = 0
+    // also makes use of implicit bool -> int conversion
+    state = (State)(SPAWN[neighbors] * ALIVE);
+    hp = state/ALIVE * STATE;
+}
+state = (State)(spawn[neighbors] * ALIVE); 
 ```
-Again, not really sure if it is better, and having the double cast is a bit of a hack, but it seems to work.
+Again, not really sure if it is better, and this code is still within a branch.
 
 TODO: is there any I forgot?
 

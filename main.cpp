@@ -141,10 +141,10 @@ public:
     }
     void sync() {
         if (state == ALIVE) {
-            state = (State)((int)SURVIVAL[neighbors] + DYING);
+            state = (State)(SURVIVAL[neighbors] + DYING);
         }
         else if (state == DEAD) {
-            state = (State)((int)SPAWN[neighbors] * ALIVE);
+            state = (State)(SPAWN[neighbors] * ALIVE);
             hp = state/ALIVE * STATE;
         }
         if (state == DYING) { // do hp decay on same tick that it is demoted to dying
