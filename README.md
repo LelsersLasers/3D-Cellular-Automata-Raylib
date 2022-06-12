@@ -2,7 +2,9 @@
 
 TODO: GIF
 
-
+- [Quick notes](#quick-notes)
+    - [Download](#download)
+    - [Raylib](#raylib)
 - [Definition of Cellular Automata](#definition-of-cellular-automata)
 - [Cell rules explained](#cell-rules-explained)
     - [Survival](#survival)
@@ -40,12 +42,25 @@ TODO: GIF
     - [Multithreading](#multithreading)
         - [Update at the same time as rendering](#update-at-the-same-time-as-rendering)
         - [Multiple threads for updating](#multiple-threads-for-updating)
-- [Compiling](#Compiling)
-- [Why I did this project](#why-i-did-this-project)
-    - [Why I chose Raylib and C++](#why-i-chose-raylib)
+- [Compiling](#compiling)
 
 
-TODO: download section with note about compiling
+## Quick notes
+
+### Download
+To quickly download the latest executable and needed files, click [here](https://github.com/LelsersLasers/3D-Cellular-Automata-Raylib/raw/main/3D-Cellular-Automata-Raylib.zip).
+Note: this was only build for Windows, but all libraries used are fully cross platform (I think).
+Information about compiling for non-Windows can be found [here](compiling).
+
+### Raylib
+For graphics, the [Raylib](https://www.raylib.com/) library is used.
+At first I wanted to use [wgpu](https://wgpu.rs/) with Rust because there were many tutorials online.
+However, I quickly found that it was overkill for what I needed and I wanted to focus on the simulation rather than writing complex shader code.
+Raylib is very simple to use, just <code>DrawCube(pos, w, l, h, color)</code> and a 3d cube appears.
+Raylib is written purely in C99, but has [bindings](https://github.com/raysan5/raylib/blob/master/BINDINGS.md) to many languages, including Python, Java, and Rust.
+I was tempted to use one of the bindings, but many of the binding were converted to fit the languages paradigms and did not match 1 to 1 with the documentation.
+The library itself without any bindings is fully compatible with C++, and I really am used to using classes, so I chose C++ over C.
+(Note: there is a [C++ binding](https://github.com/robloach/raylib-cpp) that follows the C++ pardigm rather than the C one, but I chose not to use it for simplicity.)
 
 
 ## Definition of cellular automata
@@ -497,14 +512,20 @@ As mentioned earlier, this could likely still be done better/faster, but it seem
 
 ## Compiling
 
-adad
-
-
-## Why I did this project
-
-TODO:
-Game of Life, etc
-
-### Why I chose Raylib
-
-adada
+So I don't really understand how multi-file projects work for C++/C, but the C99 version of Raylib came with a Notepad++ script to compile it.
+I modified it slightly to work with my C++ compiler and to include the library needed to read the JSON file.
+```
+SET RAYLIB_PATH=C:\raylib\raylib
+SET JSON_PATH=C:\Users\milla\Desktop\coding\3D-Cellular-Automata-Raylib\json\
+SET CC=g++
+SET CFLAGS=$(RAYLIB_PATH)\src\raylib.rc.data -s -static -Os -Wall -I$(RAYLIB_PATH)\src -I$(JSON_PATH) -Iexternal -DPLATFORM_DESKTOP -std=c++11 -pthread
+SET LDFLAGS=-lraylib -lopengl32 -lgdi32 -lwinmm
+cd $(CURRENT_DIRECTORY)
+cmd /c IF EXIST $(NAME_PART).exe del /F $(NAME_PART).exe
+npp_save
+$(CC) -o $(NAME_PART).exe $(FILE_NAME) $(CFLAGS) $(LDFLAGS)
+ENV_UNSET PATH
+cmd /c IF EXIST $(NAME_PART).exe $(NAME_PART).exe
+```
+I don't fully understand all of it, but it seems to work.
+The instuctions for installing/downloading Raylib were pretty simple and can be navigated to from their [website](https://www.raylib.com/).
