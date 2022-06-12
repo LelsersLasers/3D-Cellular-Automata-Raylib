@@ -12,7 +12,7 @@ TODO: GIF
     - [State](#state)
     - [Neighborhoods](#neighborhoods)
     - [Examples](#some-examples)
-- [rules.json](#rules.json)
+- [rules.json](#rules.json) TODO: fix link
     - [Rules JSON](#rules-json)
     - [Settings](#settings)
         - [cellSize](#cellsize)
@@ -79,7 +79,7 @@ PERSONAL/HUMAN DEFINTION
 ## Cell rules explained
 
 There are 4 rules: surivival, spawn, state, and neighborhoods.
-A cell can be in one of 3 state types: alive, dead, dying.
+A cell can be in one of 3 states: alive, dying, or dead.
 
 ### Survival
 - [X, Y, ...]
@@ -96,17 +96,22 @@ A cell can be in one of 3 state types: alive, dead, dying.
 ### State
 - X
     - Must be a single number (ex: 6)
-- Once a cell begins dying, it has X game ticks to live before disappearing
+- Once a cell begins dying, it has X simulation/update ticks to live before disappearing
 - Both survival and spawn rules will no longer affect the cell while it decays
 
 ### Neighborhoods
 - "M" or "VN"
 - How neighbors are counted
-- "M": Moore: faces + counts diagonal neighbors, think rubics cube (3^3 - 1 = 26 possible neighbors)
-- "VN": Von Neuman: only counts neighors where the faces touch (6 possible)
+- "M" - Moore:
+    - Neighbors are any cells where 1 away, including diagonals
+    - Think like a rubics cube where the current cell is the middle, all the outside/colored cubes are the neighbors
+    - 3^3 - 1 = 26 possible neighbors
+- "VN" - Von Neuman:
+    - Neighbors are only cells where the faces touch
+    -6 possible neighbors
 
 ### Some examples
-(can just copy/replace in rules.json)
+(Note: can just copy/replace in rules.json)
 
 - Slow build up: <9-18/5-7,12-13,15/6/M>
     ```
@@ -127,7 +132,7 @@ A cell can be in one of 3 state types: alive, dead, dying.
 ## rules.json
 
 The rules and settings for the simulation can be found in rules.json.
-When editing the file, make sure that all the keys are still there, and that the types of the values (number, list, string) are not changed.
+When editing the file, make sure that all the keys/variables are still there, and that the types of the values (number, list of numbers, string) are not changed.
 The simulation loads the settings from the file when it is started, so the simulation must be restarted to see any changes to rules.json.
 
 ### Rules JSON
@@ -167,13 +172,13 @@ Defaults:
 
 #### threads
 - It is not the total number of the treads used by the simulation
-- The total number of threads used by the simulation is threads + 2 because the main thread and the update thread (which then creates thread threads)
-- See the [mulithreading](#multiple-threads-for-updating) section for more info
+- The total number of threads used by the simulation is threads + 2 because the main thread and the update thread (which then creates 'threads' threads)
+    - See the [mulithreading](#multiple-threads-for-updating) section for more info
 - Type: int
 
 #### targetFPS
 - Used for [dynamic tick mode](#dynamic)
-    - See the section below for more info
+    - See the [dynamic tick mode](#dynamic) section for more info
 - Type: int
 
 
@@ -181,7 +186,9 @@ Defaults:
 
 ### CONTROLS
 
-Keyboard and mouse inputs are only checked once per frame. So on lower FPS, the controls will be less responsive.
+Keyboard and mouse inputs are only checked once per frame.
+So on lower FPS, the controls will be less responsive.
+Note: holding a key will not cause a rapid toggle. (So if the FPS is low, hold a key to make sure it is downpressed when the inputs are checked.)
 
 #### Camera controls:
 - Q/E : zoom in/out
@@ -201,15 +208,17 @@ Keyboard and mouse inputs are only checked once per frame. So on lower FPS, the 
 #### Simulation controls
 - R : re-randomize cells
     - See [aliveChanceOnSpawn](#alivechanceonspawn) for more info
+    - Note: key intentionally does not have 'rapid toggle protection'
 - B : show/hide bounds
     - Draws a blue outline of the simulation bounds
+    - If cross section mode is on, it will draw the outline around just the drawn cells
 - P : show/hide left bar
 - C : toggle cross section view
     - Shows just half the simulation
-    - Useful for seeing the center/core as it grows
+    - Useful for seeing the center/core of the simulation
     - Note: the hidden cells still update, they are just not rendered
 - Mouse click : pause/unpause
-    - Simply stops the game ticks
+    - Simply stops the update ticks
     - All other controls are still available
 - M : change between draw modes
     - See [draw modes](#draw-modes) for more info
@@ -243,7 +252,7 @@ TODO:image
 
 TODO:image
 
-- Maps the cell's posistion to a color
+- Maps the cell's posistion (X, Y, Z) to a color
     - X * K = red intensity, Y * K = green, Z * K = blue
 - Because there is no shading, it is hard to tell the difference between cells
     - This draw mode makes it easier to see the cells as each cell is (slightly) different color at the cost of not displaying the cell's state
@@ -254,7 +263,7 @@ TODO:image
 
 - Alive = red
 - Dying = scales from white to black based on how close the cell is to dead
-- Easiest to see the difference between alive and dead cells at the cost of your eyes
+- Easiest to see the state/difference between alive and dead cells at the cost of your eyes
 
 #### Single color
 
@@ -280,7 +289,7 @@ enum TickMode {
 ```
 
 #### Fast
-- The simulation progresses one tick forward per frame
+- The simulation progresses one tick forward every frame
 - The speed is often limited by the rendering of the cells, so the simulation tick speed and frame rate will decrease as more cells are rendered
 
 #### Dynamic
@@ -289,6 +298,7 @@ enum TickMode {
     1) updating the cells and drawing them
     2) just drawing the cells
 - If the time between the last update was more than 1/desiredUpdateSpeed, it will run 1, else it will run 2
+- It will adjust desiredUpdateSpeed based on the different between the current FPS and the target FPS.
 - Drawing the cells is still slow, so it might just end up as 1 tick per second on higher bounds
 
 #### Manual
@@ -308,7 +318,6 @@ TODO:
 The simulation is optimized for speed, but it still can be slow on higher bounds.
 I have made it as fast as I can, but I am sure there are ways to make it faster.
 Here are some of the things I have done to improve the speed:
-
 
 ### Indexing over iteration
 
@@ -331,6 +340,7 @@ It was hard to edit the rules when it was a boolean array, but it was easy to co
 for (size_t value : rules["spawn"]) spawn[value] = true;
 ```
 I did a similar thing for the survival numbers.
+Now, per cell, instead of having to go through an additional loop, it can index a list which is much much faster.
 
 
 ### 1 demensional over 3 demensional
@@ -351,6 +361,7 @@ size_t threeToOne(int x, int y, int z) {
 }
 ```
 It seemed to run faster when doing this extra calculation per cell than using a vector of vectors of vectors of cells.
+(Not sure if was actually worth.)
 
 
 ### Branching at the highest level
@@ -374,7 +385,8 @@ for (int x = 0; x < cellBounds/divisor; x++) {
             cells[threeToOne(x, y, z)].draw(color);
 // appropriate closing paraenthese
 ```
-However, this meant that it had to compare/switch/branch on drawMode for every cell.
+However, this meant that it had to compare/switch/branch on drawMode for every cell,
+but the value it switched on would not change, so redoing the comparison/switch/branching for every cell was exessive and slow.
 Moving the switch outside of the for loop made it so that it only had to compare/branch once (at the code of repeated code).
 ```
 switch (drawMode) {
@@ -407,7 +419,7 @@ For example, I replaced (example from earlier):
 ```
 else if (state == DEAD) {
     if (spawn[neighbors]) {
-        state = ALIVE;
+        state = ALIVE; // state is the cell's status as alive, dead, or dying
         hp = STATE; // STATE is the amount of ticks the cell lives as defined in rules.json
     }
 }
@@ -460,18 +472,18 @@ then playing just setting the cells to the oldest not drawn save (and deleting t
 However, this seems rather complicated, and I almost always use the fast tick mode, so I didn't bother.
 
 #### Multiple threads for updating
-Not counting cell2 (see above), this simulation is still "double buffered".
-What this means is that as the cells are updated, their state is not immediately changed.
-Instead the new state of each cell is only applied after the new state of each cell is calculated.
+Even when not counting cells2 (see above), this simulation is still "double buffered".
+What this means is that as the cells are updated in two parts, their state is not immediately changed.
 
-From this understanding, the update function can be split into 2 parts:
+The update function can be split into 2 parts:
 1. Calculate the neighbors of each cell based on nearby alive cells
-2. Use the neighbor count to determine new state for each cell
-The steps are the "buffers".
+2. Use the neighbor count to determine the new state for each cell
+(The steps are the "buffers".)
 
 However, within each step, the cells can be updated in parallel.
-In step 1, the information needed from other cells is the current state of each cell.
-The state of each cell does not actually change, so the timing of step 1 for each cell is not important (as long as step 1 comes before step 2).
+In step 1, the information needed from other cells is the current state of the surrounding cells.
+Because the state of each cell does not actually change in this step, 
+the timing of step 1 for each cell is not important (as long as step 1 comes before step 2).
 In step 2, there is no information needed from other cells, so again the order is not imporant (as long as step 2 comes after step 1).
 
 This means that step 1, which goes through every cell, can actually go through every cell in parallel.

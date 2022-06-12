@@ -25,5 +25,8 @@ Possible/advanced/likely won't happen ideas
 Non-code:
 - Readme
     - spelling
-- showcases, json "comment", explainantion of rules, etc
+    - make sure all links work
+    - add images
+    - fill in all 'todo' in the file
+    - anything missing?
 - Organize into multiple files?
