@@ -3,7 +3,6 @@
 TODO: GIF
 
 
-- [Why I did this project](#why-i-did-this-project)
 - [Definition of Cellular Automata](#definition-of-cellular-automata)
 - [Cell rules explained](#cell-rules-explained)
     - [Survival](#survival)
@@ -41,16 +40,12 @@ TODO: GIF
     - [Multithreading](#multithreading)
         - [Update at the same time as rendering](#update-at-the-same-time-as-rendering)
         - [Multiple threads for updating](#multiple-threads-for-updating)
-- [Other](#other)
+- [Compiling](#Compiling)
+- [Why I did this project](#why-i-did-this-project)
+    - [Why I chose Raylib and C++](#why-i-chose-raylib)
 
 
 TODO: download section with note about compiling
-
-
-## Why I did this project
-
-TODO:
-Game of Life, etc
 
 
 ## Definition of cellular automata
@@ -299,6 +294,7 @@ The simulation is optimized for speed, but it still can be slow on higher bounds
 I have made it as fast as I can, but I am sure there are ways to make it faster.
 Here are some of the things I have done to improve the speed:
 
+
 ### Indexing over iteration
 
 Before, to see if a dead cell should come I alive I had to do this:
@@ -341,6 +337,7 @@ size_t threeToOne(int x, int y, int z) {
 ```
 It seemed to run faster when doing this extra calculation per cell than using a vector of vectors of vectors of cells.
 
+
 ### Branching at the highest level
 
 Before, when doing the different draw modes, I simply went through all the cells and switched on the draw mode.
@@ -362,7 +359,7 @@ for (int x = 0; x < cellBounds/divisor; x++) {
             cells[threeToOne(x, y, z)].draw(color);
 // appropriate closing paraenthese
 ```
-However, this meant that it had to compare/branch on drawMode for every cell.
+However, this meant that it had to compare/switch/branch on drawMode for every cell.
 Moving the switch outside of the for loop made it so that it only had to compare/branch once (at the code of repeated code).
 ```
 switch (drawMode) {
@@ -383,6 +380,7 @@ switch (drawMode) {
     // reset of switches
 }
 ```
+
 
 ### Branchless programming
 
@@ -425,13 +423,13 @@ if (shouldUpdate) {
     cells2 = vector<Cell>(cells); // create copy, note: space for the cells2 vector was already allocated when the program first started
     thread updateThread(updateCells, std::ref(cells2));
 
-    draw(camera, cells, drawBounds, drawBar, showHalf, paused, drawMode, tickMode, cameraLat, cameraLon, updateSpeed);
+    draw(camera, cells, ....);
 
     updateThread.join();
     cells = vector<Cell>(cells2);
 }
 else {
-    draw(camera, cells, drawBounds, drawBar, showHalf, paused, drawMode, tickMode, cameraLat, cameraLon, updateSpeed);
+    draw(camera, cells, ....;
 }
 ```
 On a frame where the cells should be updated, it:
@@ -466,6 +464,21 @@ The amount of threads used for this is defined in the [threads](#threads) variab
 
 On a frame where update will be called, the flow is as follows:
 ```
+Visualization 1:
+Frame loop start        *
+shouldUpdate = true     |
+Create copy of cells    |
+                        |
+Draw old cells          |\ Create update thread
+                        | \ Create 'threads' threads to do step 1
+                        | / Wait for all step 1 threads to finish
+                        | \ Create 'threads' threads to do step 2
+                        | / Wait for all step 2 threads to finish
+                        |/ Rejoin with main thread
+Old cells = new cells   |
+Frame loop ends         *
+
+Visualization 2:
                                 * Frame loop start
                                 * shouldUpdate = true
                                 * create copy of cells
@@ -483,3 +496,15 @@ As mentioned earlier, this could likely still be done better/faster, but it seem
 
 
 ## Compiling
+
+adad
+
+
+## Why I did this project
+
+TODO:
+Game of Life, etc
+
+### Why I chose Raylib
+
+adada
