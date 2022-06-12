@@ -472,7 +472,7 @@ void randomizeCells(vector<Cell> &cells) {
 }
 
 
-void drawLeftBar(bool drawBounds, bool showHalf, bool paused, DrawMode drawMode, TickMode tickMode, float cameraLat, float cameraLon, int updateSpeed) {
+void drawLeftBar(bool drawBounds, bool showHalf, bool paused, DrawMode drawMode, TickMode tickMode, int ticks, int updateSpeed, float cameraLat, float cameraLon) {
     char dirs[2] = {
         (cameraLat > 0 ? 'N' : 'S'),
         (cameraLon > 0 ? 'W' : 'E')
@@ -508,6 +508,7 @@ void drawLeftBar(bool drawBounds, bool showHalf, bool paused, DrawMode drawMode,
         DrawableText("Simulation Info:"),
         DrawableText("- FPS: " + std::to_string(GetFPS())),
         DrawableText("- Ticks per sec: " + std::to_string(tickMode == FAST ? GetFPS() : updateSpeed)),
+        DrawableText("- Total ticks ('time'): " + std::to_string(ticks)),
         DrawableText("- Bound size: " + std::to_string(cellBounds)),
         DrawableText("- threads: " + std::to_string(threads) + " (+ 2)"),
         DrawableText("- Camera pos: " + std::to_string((int)abs(cameraLat)) + dirs[0] + ", " + std::to_string(abs((int)cameraLon)) + dirs[1]),
@@ -530,7 +531,7 @@ void drawLeftBar(bool drawBounds, bool showHalf, bool paused, DrawMode drawMode,
 }
 
 
-void draw(Camera3D camera, const vector<Cell> &cells, bool drawBounds, bool drawBar, bool showHalf, bool paused, DrawMode drawMode, TickMode tickMode, float cameraLat, float cameraLon, int updateSpeed) {
+void draw(Camera3D camera, const vector<Cell> &cells, bool drawBounds, bool drawBar, bool showHalf, bool paused, DrawMode drawMode, TickMode tickMode, int ticks, int updateSpeed, float cameraLat, float cameraLon) {
     BeginDrawing();
         ClearBackground(RAYWHITE);
         BeginMode3D(camera);
@@ -543,7 +544,7 @@ void draw(Camera3D camera, const vector<Cell> &cells, bool drawBounds, bool draw
             }
         EndMode3D();
         if (drawBar) {
-            drawLeftBar(drawBounds, showHalf, paused, drawMode, tickMode, cameraLat, cameraLon, updateSpeed);
+            drawLeftBar(drawBounds, showHalf, paused, drawMode, tickMode, ticks, updateSpeed, cameraLat, cameraLon);
         }
     EndDrawing();
 }
@@ -573,6 +574,8 @@ int main(void) {
     float cameraRadius = 1.75f * cellSize * cellBounds;
     const float cameraMoveSpeed = 180.0f/4.0f;
     const float cameraZoomSpeed = cellSize * cellBounds/10.0f;
+
+    int ticks = 0;
 
     bool paused = false;
     bool drawBounds = false;
@@ -620,7 +623,10 @@ int main(void) {
         if (IsKeyDown('D')|| IsKeyDown(KEY_RIGHT)) cameraLon += cameraMoveSpeed * delta;
         if (IsKeyDown('Q') || IsKeyDown(KEY_PAGE_UP)) cameraRadius -= cameraZoomSpeed * delta;
         if (IsKeyDown('E') || IsKeyDown(KEY_PAGE_DOWN)) cameraRadius += cameraZoomSpeed * delta;
-        if (IsKeyDown('R')) randomizeCells(cells);
+        if (IsKeyDown('R')) {
+            randomizeCells(cells);
+            ticks = 0;
+        }
         if (mouseTK.down(IsMouseButtonPressed(MOUSE_LEFT_BUTTON))) paused = !paused;
         if (bTK.down(IsKeyPressed('B'))) drawBounds = !drawBounds;
         if (xTK.down(IsKeyDown('X') && tickMode == MANUAL)) updateSpeed++;
@@ -672,13 +678,14 @@ int main(void) {
             cells2 = vector<Cell>(cells);
             thread updateThread(updateCells, std::ref(cells2));
 
-            draw(camera, cells, drawBounds, drawBar, showHalf, paused, drawMode, tickMode, cameraLat, cameraLon, updateSpeed);
+            draw(camera, cells, drawBounds, drawBar, showHalf, paused, drawMode, tickMode, ticks, updateSpeed, cameraLat, cameraLon);
 
             updateThread.join();
             cells = vector<Cell>(cells2);
+            ticks++;
         }
         else {
-            draw(camera, cells, drawBounds, drawBar, showHalf, paused, drawMode, tickMode, cameraLat, cameraLon, updateSpeed);
+            draw(camera, cells, drawBounds, drawBar, showHalf, paused, drawMode, tickMode, ticks, updateSpeed, cameraLat, cameraLon);
         }
 
     }
