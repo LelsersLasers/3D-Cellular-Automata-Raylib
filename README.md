@@ -1,6 +1,7 @@
 # 3D Cellular Automata [Raylib/C++]
 
-TODO: GIF
+TODO: Long GIF of camera orbiting around and draw modes changing on a pattern
+    - Keep cell bounds = 96, but change tick mode to maybe 2 ticks/sec and speed up gif
 
 - [Quick notes](#quick-notes)
     - [Download](#download)
@@ -218,7 +219,7 @@ Defaults:
 
 ## Simulation
 
-### CONTROLS
+### Controls
 
 Keyboard and mouse inputs are only checked once per frame.
 So on lower FPS, the controls will be less responsive.
@@ -477,8 +478,6 @@ else if (state == DEAD) {
 }
 ```
 Again, not really sure if it is better, and this code is still within a branch.
-
-TODO: is there any I forgot?
 
 
 ### Multithreading
