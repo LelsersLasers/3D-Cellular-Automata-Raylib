@@ -41,7 +41,7 @@ TODO: Long GIF of camera orbiting around and draw modes changing on a pattern
     - [Tick modes](#tick-modes)
 - [Optimizations](#optimizations)
     - [Indexing over iteration](#indexing-over-iteration)
-    - [1 demensional vector](#1-demensional-over-3-demensional)
+    - [1 dimensional vector](#1-dimensional-over-3-dimensional)
     - [Branching at the highest level](#branching-at-the-highest-level)
     - [Branchless programing](#branchless-programming)
     - [Multithreading](#multithreading)
@@ -65,7 +65,7 @@ Raylib is very simple to use, just <code>DrawCube(pos, w, l, h, color)</code> an
 Raylib is written purely in C99, but has [bindings](https://github.com/raysan5/raylib/blob/master/BINDINGS.md) to many languages, including Python, Java, and Rust.
 I was tempted to use one of the bindings, but many of the binding were converted to fit the languages paradigms and did not match 1 to 1 with the documentation.
 The library itself without any bindings is fully compatible with C++, and I really am used to using classes, so I chose C++ over C.
-(Note: there is a [C++ binding](https://github.com/robloach/raylib-cpp) that follows the C++ pardigm rather than the C one, but I chose not to use it for simplicity.)
+(Note: there is a [C++ binding](https://github.com/robloach/raylib-cpp) that follows the C++ paradigm rather than the C one, but I chose not to use it for simplicity.)
 
 
 ## Definition of cellular automata
@@ -113,18 +113,18 @@ Source:
 
 ## Cell rules explained
 
-There are 4 rules: surivival, spawn, state, and neighborhoods.
+There are 4 rules: survival, spawn, state, and neighborhoods.
 A cell can be in one of 3 states: alive, dying, or dead.
 
 ### Survival
 - [X, Y, ...]
-    - Can be a list of numbers (ex: [2, 3, 6, 7, 10]) or a signle number (ex: [2])
+    - Can be a list of numbers (ex: [2, 3, 6, 7, 10]) or a single number (ex: [2])
 - If a cell is alive, it will remain alive if it has X, Y, or ... neighbors
 - If it does not have X, Y, or ... neighbors, it will begin dying
 
 ### Spawn
 - [X, Y, ...]
-    - Can be a list of numbers (ex: [2, 3, 6, 7, 10]) or a signle number (ex: [2])
+    - Can be a list of numbers (ex: [2, 3, 6, 7, 10]) or a single number (ex: [2])
     - Can have any amount of overlap with survival
 - If a cell is dead, it will come alive if it has X, Y, or ... neighbors
 
@@ -139,9 +139,9 @@ A cell can be in one of 3 states: alive, dying, or dead.
 - How neighbors are counted
 - "M" - Moore:
     - Neighbors are any cells where 1 away, including diagonals
-    - Think like a rubics cube where the current cell is the middle, all the outside/colored cubes are the neighbors
+    - Think like a Rubik's cube where the current cell is the middle, all the outside/colored cubes are the neighbors
     - 3^3 - 1 = 26 possible neighbors
-- "VN" - Von Neuman:
+- "VN" - Von Neumann:
     - Neighbors are only cells where the faces touch
     -6 possible neighbors
 
@@ -173,7 +173,7 @@ The simulation loads the settings from the file when it is started, so the simul
 ### Changing the rules
 
 The first 4 keys are the rules for the simulation.
-The explainations for these rules are [above](#cell-rules-explained) (as well as their types).
+The explanations for these rules are [above](#cell-rules-explained) (as well as their types).
 
 ### Changing the settings
 
@@ -189,7 +189,7 @@ Defaults:
 #### cellSize
 - The size (length of the edge of cube) for each cell in the simulation
 - Used by Raylib
-- Changing this should have almost no effect on the simulation as the camera posistion is relative to this number
+- Changing this should have almost no effect on the simulation as the camera position is relative to this number
 - Type: float
 
 #### cellBounds
@@ -208,7 +208,7 @@ Defaults:
 #### threads
 - It is not the total number of the treads used by the simulation
 - The total number of threads used by the simulation is threads + 2 because the main thread and the update thread (which then creates 'threads' threads)
-    - See the [mulithreading](#multiple-threads-for-updating) section for more info
+    - See the [multithreading](#multiple-threads-for-updating) section for more info
 - Type: int
 
 #### targetFPS
@@ -223,7 +223,7 @@ Defaults:
 
 Keyboard and mouse inputs are only checked once per frame.
 So on lower FPS, the controls will be less responsive.
-Note: holding a key will not cause a rapid toggle. (So if the FPS is low, hold a key to make sure it is downpressed when the inputs are checked.)
+Note: holding a key will not cause a rapid toggle. (So if the FPS is low, hold a key to make sure it is down pressed when the inputs are checked.)
 
 #### Camera controls:
 - Q/E : zoom in/out
@@ -237,7 +237,7 @@ Note: holding a key will not cause a rapid toggle. (So if the FPS is low, hold a
 #### Window controls:
 - Enter : toggle fullscreen
 - O : toggle true fullscreen
-    - The Raylib implementation of fullscreen is not garenteed to scale correctly
+    - The Raylib implementation of fullscreen is not guaranteed to scale correctly
     - Using Enter is highly recommended
 
 #### Simulation controls
@@ -302,7 +302,7 @@ enum DrawMode {
 
 ![RGB_CUBE image](https://github.com/LelsersLasers/3D-Cellular-Automata-Raylib/raw/main/Showcase/RGB_CUBE.PNG)
 
-- Maps the cell's posistion (X, Y, Z) to a color
+- Maps the cell's position (X, Y, Z) to a color
     - X * K = red intensity, Y * K = green, Z * K = blue
 - Because there is no shading, it is hard to tell the difference between cells
     - This draw mode makes it easier to see the cells as each cell is (slightly) different color at the cost of not displaying the cell's state
@@ -387,7 +387,7 @@ I did a similar thing for the survival numbers.
 Now, per cell, instead of having to go through an additional loop, it can index a list which is much much faster.
 
 
-### 1 demensional over 3 demensional
+### 1 dimensional over 3 dimensional
 
 Technically, there is no reason to use a vector over an array.
 However, I did it this way because later I might add the ability to change the cell bounds on demand.
@@ -398,7 +398,7 @@ However, before, I had a vector of vectors of vectors of cells:
 vector<vector<vector<Cell>>> cells;
 ```
 After some googling, I found that accessing vectors of vectors (of vectors) is slow, because of the "indirection and lack of locality [which] quickly kills a lot of performance."
-To solve this problem, I made the cells a 1 demensional vector, and indexed with:
+To solve this problem, I made the cells a 1 dimensional vector, and indexed with:
 ```
 size_t threeToOne(int x, int y, int z) {
     return x * cellBounds * cellBounds + y * cellBounds  + z;
@@ -427,10 +427,10 @@ for (int x = 0; x < cellBounds/divisor; x++) {
                 // reset of switches
             }
             cells[threeToOne(x, y, z)].draw(color);
-// appropriate closing paraenthese
+// appropriate closing parentheses
 ```
 However, this meant that it had to compare/switch/branch on drawMode for every cell,
-but the value it switched on would not change, so redoing the comparison/switch/branching for every cell was exessive and slow.
+but the value it switched on would not change, so redoing the comparison/switch/branching for every cell was excessive and slow.
 Moving the switch outside of the for loop made it so that it only had to compare/branch once (at the code of repeated code).
 ```
 switch (drawMode) {
@@ -439,14 +439,14 @@ switch (drawMode) {
             for (int y = 0; y < cellBounds; y++) {
                 for (int z = 0; z < cellBounds; z++) {
                     cells[threeToOne(x, y, z)].drawDualColor();
-        // appropriate closing paraenthese
+        // appropriate closing parentheses
         break;
     case RGB_CUBE:
         for (int x = 0; x < cellBounds/divisor; x++) {
             for (int y = 0; y < cellBounds; y++) {
                 for (int z = 0; z < cellBounds; z++) {
                     cells[threeToOne(x, y, z)].drawRGBCube();
-        // appropriate closing paraenthese
+        // appropriate closing parentheses
         break;
     // reset of switches
 }
@@ -509,7 +509,7 @@ On a frame where the cells should be updated, it:
 This means that the cells are being updated for the next frame, not the current one.
 
 This could be faster when the tick mode is not on fast by
-updating the cells as fast as possible seperate from the draw and saving each new tick
+updating the cells as fast as possible separate from the draw and saving each new tick
 then playing just setting the cells to the oldest not drawn save (and deleting the save).
 However, this seems rather complicated, and I almost always use the fast tick mode, so I didn't bother.
 
@@ -526,7 +526,7 @@ However, within each step, the cells can be updated in parallel.
 In step 1, the information needed from other cells is the current state of the surrounding cells.
 Because the state of each cell does not actually change in this step, 
 the timing of step 1 for each cell is not important (as long as step 1 comes before step 2).
-In step 2, there is no information needed from other cells, so again the order is not imporant (as long as step 2 comes after step 1).
+In step 2, there is no information needed from other cells, so again the order is not important (as long as step 2 comes after step 1).
 
 This means that step 1, which goes through every cell, can actually go through every cell in parallel.
 The amount of threads used for this is defined in the [threads](#threads) variable in rules.json.
@@ -582,4 +582,4 @@ ENV_UNSET PATH
 cmd /c IF EXIST $(NAME_PART).exe $(NAME_PART).exe
 ```
 I don't fully understand all of it, but it seems to work.
-The instuctions for installing/downloading Raylib were pretty simple and can be navigated to from their [website](https://www.raylib.com/).
+The instructions for installing/downloading Raylib were pretty simple and can be navigated to from their [website](https://www.raylib.com/).
