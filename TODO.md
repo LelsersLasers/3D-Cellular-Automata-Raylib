@@ -25,5 +25,6 @@ Non-code:
     - make sure all links work
     - add images
     - fill in all 'todo' in the file
+    - make better use of tables?
     - anything missing?
 - Organize into multiple files?
