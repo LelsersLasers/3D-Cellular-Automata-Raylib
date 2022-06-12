@@ -38,8 +38,6 @@ TODO: GIF
         - [Single color](#single-color)
         - [Distance from center](#distance-from-center)
     - [Tick modes](#tick-modes)
-    - [Other info](#other-info)
-- [Showcase](#showcase)
 - [Optimizations](#optimizations)
     - [Indexing over iteration](#indexing-over-iteration)
     - [1 demensional vector](#1-demensional-over-3-demensional)
@@ -276,7 +274,7 @@ enum DrawMode {
 
 #### Dual color
 
-TODO:image
+![DUAL_COLOR Image](https://github.com/LelsersLasers/3D-Cellular-Automata-Raylib/raw/main/Showcase/DUAL_COLOR.PNG)
 
 - Displays the cell's state as a color from green to red
 - Green = alive
@@ -286,7 +284,7 @@ TODO:image
 
 #### RGB
 
-TODO:image
+![RGB_CUBE Image](https://github.com/LelsersLasers/3D-Cellular-Automata-Raylib/raw/main/Showcase/RGB_CUBE.PNG)
 
 - Maps the cell's posistion (X, Y, Z) to a color
     - X * K = red intensity, Y * K = green, Z * K = blue
@@ -295,7 +293,7 @@ TODO:image
 
 #### Dual color dying
 
-TODO:image
+![DUAL_COLOR_DYING Image](https://github.com/LelsersLasers/3D-Cellular-Automata-Raylib/raw/main/Showcase/DUAL_COLOR_DYING.PNG)
 
 - Alive = red
 - Dying = scales from white to black based on how close the cell is to dead
@@ -303,13 +301,13 @@ TODO:image
 
 #### Single color
 
-TODO:image
+![SINGLE_COLOR Image](https://github.com/LelsersLasers/3D-Cellular-Automata-Raylib/raw/main/Showcase/SINGLE_COLOR.PNG)
 
 - Like dual color, but instead of scaling from green to red, it scales from red to dark red/black
 
 #### Distance from center
 
-TODO:image
+![CENTER_DIST Image](https://github.com/LelsersLasers/3D-Cellular-Automata-Raylib/raw/main/Showcase/CENTER_DIST.PNG)
 
 - A scale of how far each cell is from the center of the simulation from black to white
 - Like RGB, it is easier to see the difference between cells at the cost of not displaying the cell's state
@@ -342,12 +340,6 @@ enum TickMode {
 - Increasing above the current FPS effectively makes the simulation run as if it was on Fast
 - It works the same way as dynamic (alternating between updating and drawing and just drawing based on time between updates)
 
-### OTHER INFO
-TODO:?
-
-## Showcase
-
-TODO:
 
 ## Optimization
 
