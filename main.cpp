@@ -119,6 +119,8 @@ private:
     size_t neighbors = 0;
     void draw(Color color) const { DrawCube(pos, cellSize, cellSize, cellSize, color); }
 public:
+    static int aliveCells;
+
     Cell(Vector3Int index) {
         this->index = index;
         pos = {
@@ -150,6 +152,7 @@ public:
         if (state == DYING) { // do hp decay on same tick that it is demoted to dying
             if (--hp < 0) state = DEAD;
         }
+        aliveCells += state == ALIVE;
     }
     void drawDualColor() const {
         if (state != DEAD) {
@@ -203,6 +206,7 @@ public:
         }
     }
 };
+int Cell::aliveCells = 1;
 
 
 string textFromEnum(NeighborType nt) {
@@ -307,6 +311,7 @@ void updateNeighbors(vector<Cell> &cells, int start, int end, const Vector3Int o
 void updateCells(vector<Cell> &cells) {
     Vector3Int offsets[26];
     size_t totalOffsets;
+    Cell::aliveCells = 1;
     if (NEIGHBORHOODS == MOORE) {
         // const Vector3Int offsetsM[26] = {
         //     { -1, -1, -1 },
@@ -469,10 +474,11 @@ void randomizeCells(vector<Cell> &cells) {
             }
         }
     }
+    Cell::aliveCells = 1;
 }
 
 
-void drawLeftBar(bool drawBounds, bool showHalf, bool paused, DrawMode drawMode, TickMode tickMode, int ticks, int updateSpeed, float cameraLat, float cameraLon) {
+void drawLeftBar(bool drawBounds, bool showHalf, bool paused, DrawMode drawMode, TickMode tickMode, int updateSpeed, int ticks, float growthRate, float cameraLat, float cameraLon) {
     char dirs[2] = {
         (cameraLat > 0 ? 'N' : 'S'),
         (cameraLon > 0 ? 'W' : 'E')
@@ -509,6 +515,7 @@ void drawLeftBar(bool drawBounds, bool showHalf, bool paused, DrawMode drawMode,
         DrawableText("- FPS: " + std::to_string(GetFPS())),
         DrawableText("- Ticks per sec: " + std::to_string(tickMode == FAST ? GetFPS() : updateSpeed)),
         DrawableText("- Total ticks ('time'): " + std::to_string(ticks)),
+        DrawableText("- Growth Rate: " + std::to_string((int)((growthRate - 1.0f) * 100)) + "%"),
         DrawableText("- Bound size: " + std::to_string(cellBounds)),
         DrawableText("- threads: " + std::to_string(threads) + " (+ 2)"),
         DrawableText("- Camera pos: " + std::to_string((int)abs(cameraLat)) + dirs[0] + ", " + std::to_string(abs((int)cameraLon)) + dirs[1]),
@@ -531,7 +538,7 @@ void drawLeftBar(bool drawBounds, bool showHalf, bool paused, DrawMode drawMode,
 }
 
 
-void draw(Camera3D camera, const vector<Cell> &cells, bool drawBounds, bool drawBar, bool showHalf, bool paused, DrawMode drawMode, TickMode tickMode, int ticks, int updateSpeed, float cameraLat, float cameraLon) {
+void draw(Camera3D camera, const vector<Cell> &cells, bool drawBounds, bool drawBar, bool showHalf, bool paused, DrawMode drawMode, TickMode tickMode, int updateSpeed, int ticks, float growthRate, float cameraLat, float cameraLon) {
     BeginDrawing();
         ClearBackground(RAYWHITE);
         BeginMode3D(camera);
@@ -544,7 +551,7 @@ void draw(Camera3D camera, const vector<Cell> &cells, bool drawBounds, bool draw
             }
         EndMode3D();
         if (drawBar) {
-            drawLeftBar(drawBounds, showHalf, paused, drawMode, tickMode, ticks, updateSpeed, cameraLat, cameraLon);
+            drawLeftBar(drawBounds, showHalf, paused, drawMode, tickMode, updateSpeed, ticks, growthRate, cameraLat, cameraLon);
         }
     EndDrawing();
 }
@@ -576,6 +583,8 @@ int main(void) {
     const float cameraZoomSpeed = cellSize * cellBounds/10.0f;
 
     int ticks = 0;
+    int lastAliveCells = 1;
+    float growthRate = 1.0f;
 
     bool paused = false;
     bool drawBounds = false;
@@ -678,14 +687,17 @@ int main(void) {
             cells2 = vector<Cell>(cells);
             thread updateThread(updateCells, std::ref(cells2));
 
-            draw(camera, cells, drawBounds, drawBar, showHalf, paused, drawMode, tickMode, ticks, updateSpeed, cameraLat, cameraLon);
+            draw(camera, cells, drawBounds, drawBar, showHalf, paused, drawMode, tickMode, updateSpeed, ticks, growthRate, cameraLat, cameraLon);
 
             updateThread.join();
             cells = vector<Cell>(cells2);
+            
             ticks++;
+            growthRate = Cell::aliveCells / (float)lastAliveCells;
+            lastAliveCells = Cell::aliveCells;
         }
         else {
-            draw(camera, cells, drawBounds, drawBar, showHalf, paused, drawMode, tickMode, ticks, updateSpeed, cameraLat, cameraLon);
+            draw(camera, cells, drawBounds, drawBar, showHalf, paused, drawMode, tickMode, updateSpeed, ticks, growthRate, cameraLat, cameraLon);
         }
 
     }
