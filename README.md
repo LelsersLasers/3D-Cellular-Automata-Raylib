@@ -18,9 +18,9 @@ TODO: GIF
     - [State](#state)
     - [Neighborhoods](#neighborhoods)
     - [Examples](#some-examples)
-- [rules.json](#rules.json) TODO: fix link
-    - [Rules JSON](#rules-json)
-    - [Settings](#settings)
+- [How to change the rules and settings (rules.json)](#how-to-change-the-rules-and-settings)
+    - [Changing the rules](#changing-the-rules)
+    - [Changing the settings](#changing-the-settings)
         - [cellSize](#cellsize)
         - [cellBounds](#cellbounds)
         - [aliveChanceOnSpawn](#alivechanceonspawn)
@@ -111,6 +111,7 @@ Source:
 - <cite>https://www.techtarget.com/searchenterprisedesktop/definition/cellular-automaton#:~:text=A%20cellular%20automaton%20(CA)%20is,the%20states%20of%20neighboring%20cells.</cite>
 - <cite>https://en.wikipedia.org/wiki/Cellular_automaton#Applications</cite>
 
+
 ## Cell rules explained
 
 There are 4 rules: surivival, spawn, state, and neighborhoods.
@@ -164,18 +165,18 @@ A cell can be in one of 3 states: alive, dying, or dead.
     ```
 
 
-## rules.json
+## How to change the rules and settings
 
 The rules and settings for the simulation can be found in rules.json.
 When editing the file, make sure that all the keys/variables are still there, and that the types of the values (number, list of numbers, string) are not changed.
 The simulation loads the settings from the file when it is started, so the simulation must be restarted to see any changes to rules.json.
 
-### Rules JSON
+### Changing the rules
 
 The first 4 keys are the rules for the simulation.
 The explainations for these rules are [above](#cell-rules-explained) (as well as their types).
 
-### Settings
+### Changing the settings
 
 Defaults:
 ```
