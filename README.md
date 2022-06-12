@@ -246,11 +246,26 @@ Note: holding a key will not cause a rapid toggle. (So if the FPS is low, hold a
 - B : show/hide bounds
     - Draws a blue outline of the simulation bounds
     - If cross section mode is on, it will draw the outline around just the drawn cells
+
+    | Bounds off | Bounds on |
+    :-:|:-:
+    | ![Bounds off image](https://github.com/LelsersLasers/3D-Cellular-Automata-Raylib/raw/main/Showcase/default.PNG) | ![Bounds on image](https://github.com/LelsersLasers/3D-Cellular-Automata-Raylib/raw/main/Showcase/BoundsOn.PNG)  |
+
 - P : show/hide left bar
+
+    | Bar off | Bar on |
+    :-:|:-:
+    | ![Cross section image](https://github.com/LelsersLasers/3D-Cellular-Automata-Raylib/raw/main/Showcase/BarOff.PNG) | ![Cross section on image](https://github.com/LelsersLasers/3D-Cellular-Automata-Raylib/raw/main/Showcase/default.PNG) |
+
 - C : toggle cross section view
     - Shows just half the simulation
     - Useful for seeing the center/core of the simulation
     - Note: the hidden cells still update, they are just not rendered
+
+    | Cross section off | Cross section on |
+    :-:|:-:
+    | ![Cross section image](https://github.com/LelsersLasers/3D-Cellular-Automata-Raylib/raw/main/Showcase/CrossSectionOff.PNG) | ![Cross section on image](https://github.com/LelsersLasers/3D-Cellular-Automata-Raylib/raw/main/Showcase/CrossSectionOn.PNG)  |
+
 - Mouse click : pause/unpause
     - Simply stops the update ticks
     - All other controls are still available
@@ -274,7 +289,7 @@ enum DrawMode {
 
 #### Dual color
 
-![DUAL_COLOR Image](https://github.com/LelsersLasers/3D-Cellular-Automata-Raylib/raw/main/Showcase/DUAL_COLOR.PNG)
+![DUAL_COLOR image](https://github.com/LelsersLasers/3D-Cellular-Automata-Raylib/raw/main/Showcase/DUAL_COLOR.PNG)
 
 - Displays the cell's state as a color from green to red
 - Green = alive
@@ -284,7 +299,7 @@ enum DrawMode {
 
 #### RGB
 
-![RGB_CUBE Image](https://github.com/LelsersLasers/3D-Cellular-Automata-Raylib/raw/main/Showcase/RGB_CUBE.PNG)
+![RGB_CUBE image](https://github.com/LelsersLasers/3D-Cellular-Automata-Raylib/raw/main/Showcase/RGB_CUBE.PNG)
 
 - Maps the cell's posistion (X, Y, Z) to a color
     - X * K = red intensity, Y * K = green, Z * K = blue
@@ -293,7 +308,7 @@ enum DrawMode {
 
 #### Dual color dying
 
-![DUAL_COLOR_DYING Image](https://github.com/LelsersLasers/3D-Cellular-Automata-Raylib/raw/main/Showcase/DUAL_COLOR_DYING.PNG)
+![DUAL_COLOR_DYING image](https://github.com/LelsersLasers/3D-Cellular-Automata-Raylib/raw/main/Showcase/DUAL_COLOR_DYING.PNG)
 
 - Alive = red
 - Dying = scales from white to black based on how close the cell is to dead
@@ -301,18 +316,18 @@ enum DrawMode {
 
 #### Single color
 
-![SINGLE_COLOR Image](https://github.com/LelsersLasers/3D-Cellular-Automata-Raylib/raw/main/Showcase/SINGLE_COLOR.PNG)
+![SINGLE_COLOR image](https://github.com/LelsersLasers/3D-Cellular-Automata-Raylib/raw/main/Showcase/SINGLE_COLOR.PNG)
 
 - Like dual color, but instead of scaling from green to red, it scales from red to dark red/black
 
 #### Distance from center
 
-![CENTER_DIST Image](https://github.com/LelsersLasers/3D-Cellular-Automata-Raylib/raw/main/Showcase/CENTER_DIST.PNG)
+![CENTER_DIST image](https://github.com/LelsersLasers/3D-Cellular-Automata-Raylib/raw/main/Showcase/CENTER_DIST.PNG)
 
 - A scale of how far each cell is from the center of the simulation from black to white
 - Like RGB, it is easier to see the difference between cells at the cost of not displaying the cell's state
 
-### TICK MODES
+### Tick modes
 
 ```
 enum TickMode {
