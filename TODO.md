@@ -1,17 +1,14 @@
 # TODO
 
-Key bind to reload from JSON?
-- Would have to reset a lot of things
-
-
 Cleaning:
 - 'hard set' offsets in updateCells()
 - Where can use branchless? Is it faster?
 
 Possible/advanced/likely won't happen ideas
 - On demand changes for bound, cell rules, (colors, etc)?
+    - Or maybe live/key bind to reload from JSON?
 - Menu screens etc?
-- - Shaders to make cells eaiser to see?
+- Shaders to make cells eaiser to see?
 - Improvde preformance?
     - Calc on GPU?
     - Improve multithreading?
