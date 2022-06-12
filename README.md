@@ -6,6 +6,12 @@ TODO: GIF
     - [Download](#download)
     - [Raylib](#raylib)
 - [Definition of Cellular Automata](#definition-of-cellular-automata)
+    - [Uses of cellular automata](#uses-of-cellular-automata)
+        - [Epidemiology](#epidemiology)
+        - [Anthropology](#anthropology)
+        - [Biology](#biology)
+        - [Physics](#physics)
+        - [Cryptography](#cryptography)
 - [Cell rules explained](#cell-rules-explained)
     - [Survival](#survival)
     - [Spawn](#spawn)
@@ -72,9 +78,38 @@ The library itself without any bindings is fully compatible with C++, and I real
 > 
 > &mdash; <cite>Wikipedia</cite>
 
-TODO:?
-PERSONAL/HUMAN DEFINTION
+> Cellular automata are discrete, abstract computational systems that have proved useful both as general models of complexity and as more specific representations of non-linear dynamics in a variety of scientific fields. Firstly, cellular automata are (typically) spatially and temporally discrete: they are composed of a finite or denumerable set of homogeneous, simple units, the atoms or cells. At each time unit, the cells instantiate one of a finite set of states. They evolve in parallel at discrete time steps, following state update functions or dynamical transition rules: the update of a cell state obtains by taking into account the states of cells in its local neighborhood (there are, therefore, no actions at a distance). Secondly, cellular automata are abstract: they can be specified in purely mathematical terms and physical structures can implement them. Thirdly, cellular automata are computational systems: they can compute functions and solve algorithmic problems. Despite functioning in a different way from traditional, Turing machine-like devices, cellular automata with suitable rules can emulate a universal [Turing machine (see entry)](https://plato.stanford.edu/entries/turing-machine/), and therefore compute, given [Turing’s thesis (see entry)](https://plato.stanford.edu/entries/church-turing/), anything computable.
+>
+> &mdash; <cite>Stanford Encyclopedia of Philosophy</cite>
 
+> A cellular automaton is a collection of cells arranged in a grid of specified shape, such that each cell changes state as a function of time, according to a defined set of rules driven by the states of neighboring cells.
+>
+> &mdash; <cite>TechTarget</cite>
+
+### Uses of cellular automata
+
+#### Epidemiology
+Cellular automata are used to study the evolution of disease epidemics through computer modeling.
+
+#### Anthropology
+In anthropology, cellular automata with fundamental space-time representations are used to model the formation of civil societies.
+
+#### Sociology
+Cellular automata are used to study the causes and effects of civil violence.
+
+#### Biology
+Several biological processes and systems are simulated using cellular automata, including the patterns of some seashells, moving wave patterns on the skin of cephalopods and the behaviors of brain neurons.
+
+#### Physics
+Cellular automata are used to simulate and study physical phenomena, such as gas and fluid dynamics.
+
+#### Cryptography
+Cellular automata automata are proposed for use in public key cryptography.
+They can be utilized to construct pseudorandom number generators, and to design error correction codes.
+
+Source:
+- <cite>https://www.techtarget.com/searchenterprisedesktop/definition/cellular-automaton#:~:text=A%20cellular%20automaton%20(CA)%20is,the%20states%20of%20neighboring%20cells.</cite>
+- <cite>https://en.wikipedia.org/wiki/Cellular_automaton#Applications</cite>
 
 ## Cell rules explained
 
