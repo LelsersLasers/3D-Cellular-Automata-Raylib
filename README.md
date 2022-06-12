@@ -39,6 +39,8 @@ TODO: GIF
     - [Branching at the highest level](#branching-at-the-highest-level)
     - [Branchless programing](#branchless-programming)
     - [Multithreading](#multithreading)
+        - [Update at the same time as rendering](#update-at-the-same-time-as-rendering)
+        - [Multiple threads for updating](#multiple-threads-for-updating)
 - [Other](#other)
 
 
@@ -156,7 +158,7 @@ Defaults:
 #### threads
 - It is not the total number of the treads used by the simulation
 - The total number of threads used by the simulation is threads + 2 because the main thread and the update thread (which then creates thread threads)
-- See the section at the bottom about optimization for more info
+- See the [mulithreading](#multiple-threads-for-updating) section for more info
 - Type: int
 
 #### targetFPS
@@ -295,6 +297,7 @@ TODO:
 
 The simulation is optimized for speed, but it still can be slow on higher bounds.
 I have made it as fast as I can, but I am sure there are ways to make it faster.
+Here are some of the things I have done to improve the speed:
 
 ### Indexing over iteration
 
@@ -314,7 +317,7 @@ if (spawn[neighbors]) state = ALIVE;
 ```
 It was hard to edit the rules when it was a boolean array, but it was easy to convert a list of spawn numbers to a boolean array like:
 ```
-for (size_t value : rules["spawn"]) SPAWN[value] = true;
+for (size_t value : rules["spawn"]) spawn[value] = true;
 ```
 I did a similar thing for the survival numbers.
 
@@ -327,7 +330,7 @@ My understanding is that a vector and an array are the same speed except for all
 
 However, before, I had a vector of vectors of vectors of cells:
 ```
-vector<vector<vector<Cell>>> cells
+vector<vector<vector<Cell>>> cells;
 ```
 After some googling, I found that accessing vectors of vectors (of vectors) is slow, because of the "indirection and lack of locality [which] quickly kills a lot of performance."
 To solve this problem, I made the cells a 1 demensional vector, and indexed with:
@@ -378,7 +381,7 @@ switch (drawMode) {
         // appropriate closing paraenthese
         break;
     // reset of switches
-
+}
 ```
 
 ### Branchless programming
@@ -395,7 +398,6 @@ else if (state == DEAD) {
         hp = STATE; // STATE is the amount of ticks the cell lives as defined in rules.json
     }
 }
-
 ```
 With:
 ```
@@ -413,7 +415,71 @@ TODO: is there any I forgot?
 
 ### Multithreading
 
+Raylib does not support multithreaded rendering (see [this post from creator of Raylib](https://twitter.com/raysan5/status/1119273062405373952?lang=en)).
+
+#### Update at the same time as rendering
+However, I can still run the update functions while the main thread draws.
+This can be seen here (note: shouldUpdate depends on the [tick mode](#tick-mode) where it is always set to true if it is on fast):
+```
+if (shouldUpdate) {
+    cells2 = vector<Cell>(cells); // create copy, note: space for the cells2 vector was already allocated when the program first started
+    thread updateThread(updateCells, std::ref(cells2));
+
+    draw(camera, cells, drawBounds, drawBar, showHalf, paused, drawMode, tickMode, cameraLat, cameraLon, updateSpeed);
+
+    updateThread.join();
+    cells = vector<Cell>(cells2);
+}
+else {
+    draw(camera, cells, drawBounds, drawBar, showHalf, paused, drawMode, tickMode, cameraLat, cameraLon, updateSpeed);
+}
+```
+On a frame where the cells should be updated, it:
+1. Creates a copy of the cells so the cells don't change while the main thread is drawing
+2. Creates a thread to update the cells
+3. Draws the old cells
+4. Waits for the thread to finish and then sets the cells to the new cells
+This means that the cells are being updated for the next frame, not the current one.
+
+This could be faster when the tick mode is not on fast by
+updating the cells as fast as possible seperate from the draw and saving each new tick
+then playing just setting the cells to the oldest not drawn save (and deleting the save).
+However, this seems rather complicated, and I almost always use the fast tick mode, so I didn't bother.
+
+#### Multiple threads for updating
+Not counting cell2 (see above), this simulation is still "double buffered".
+What this means is that as the cells are updated, their state is not immediately changed.
+Instead the new state of each cell is only applied after the new state of each cell is calculated.
+
+From this understanding, the update function can be split into 2 parts:
+1. Calculate the neighbors of each cell based on nearby alive cells
+2. Use the neighbor count to determine new state for each cell
+The steps are the "buffers".
+
+However, within each step, the cells can be updated in parallel.
+In step 1, the information needed from other cells is the current state of each cell.
+The state of each cell does not actually change, so the timing of step 1 for each cell is not important (as long as step 1 comes before step 2).
+In step 2, there is no information needed from other cells, so again the order is not imporant (as long as step 2 comes after step 1).
+
+This means that step 1, which goes through every cell, can actually go through every cell in parallel.
+The amount of threads used for this is defined in the [threads](#threads) variable in rules.json.
+
+On a frame where update will be called, the flow is as follows:
+```
+                                * Frame loop start
+                                * shouldUpdate = true
+                                * create copy of cells
+                               / \ a thread for updating is created with the copy
+Main thread renders old cells *   * splits into 'threads' threads to do step 1
+                              |   * waits for all threads to finish
+                              |   * splits into 'threads' threads to do step 2
+                              |   * waits for all threads to finish
+                               \ / rejoins to main thread
+                Frame loop ends * 
+```
+This makes it so there are actually 'threads' + 2 (main + overall update) total threads running at the same time.
+
+As mentioned earlier, this could likely still be done better/faster, but it seems to work well and vastly improves performance.
 
 
-## Other
-- COMPILING
+## Compiling
