@@ -1,7 +1,6 @@
 # 3D Cellular Automata [Raylib/C++]
 
-TODO: Long GIF of camera orbiting around and draw modes changing on a pattern
-    - Keep cell bounds = 96, but change tick mode to maybe 2 ticks/sec and speed up gif
+![Main showcase gif](https://github.com/LelsersLasers/3D-Cellular-Automata-Raylib/raw/main/Showcase/MainShowcaseGIFLowRez.PNG)
 
 - [Quick notes](#quick-notes)
     - [Download](#download)
