@@ -1,30 +1,21 @@
-# TODO
+# Possible Ideas
 
 Cleaning:
 - 'hard set' offsets in updateCells()
 - Where can use branchless? Is it faster?
 
-Possible/advanced/likely won't happen ideas
+Possible/advanced/likely won't happen ideas:
 - On demand changes for bound, cell rules, (colors, etc)?
     - Or maybe live/key bind to reload from JSON?
-- Menu screens etc?
-- Shaders to make cells eaiser to see?
-- Improvde preformance?
-    - Calc on GPU?
+- Menu screens, etc?
+- Shaders to make cells easier to see/tell apart?
+- Further improve performance?
+    - Do calculations on GPU?
     - Improve multithreading?
         - Saved updated/synced cells and moderate the playback?
     - Branchless programing?
         - Already sort of there, branches at the highest level possible
-        - Fastest: new_state = old_state * transistion with linear math
+        - According to google - fastest: new_state = old_state * transition with linear math
     - Profiling?
         - See where time is spent -> fix there
-
-Non-code:
-- Readme
-    - spelling
-    - make sure all links work
-    - add images
-    - fill in all 'todo' in the file
-    - make better use of tables?
-    - anything missing?
-- Organize into multiple files?
+- Reorganize project structure to follow C++ paradigms (e.g. header files, etc)
