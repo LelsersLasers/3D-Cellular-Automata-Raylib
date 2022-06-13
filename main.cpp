@@ -25,12 +25,6 @@ enum NeighborType {
     VON_NEUMANN
 };
 
-enum State {
-    ALIVE = 2,
-    DYING = 1,
-    DEAD = 0
-};
-
 enum DrawMode {
     DUAL_COLOR = 0,
     RGB_CUBE = 1,
@@ -112,10 +106,9 @@ float calc_distance(Vector3Int a, Vector3Int b) {
 
 class Cell {
 private:
-    State state = DEAD;
     Vector3 pos;
     Vector3Int index;
-    int hp = 0;
+    int hp = -1;
     size_t neighbors = 0;
     static int aliveCells;
     static int deadCells;
@@ -140,33 +133,27 @@ public:
     static int getDeadCells() { return deadCells; }
 
     void clearNeighbors() { neighbors = 0; }
-    void addNeighbor(int neighborState) { neighbors += neighborState/2; }
-    State getState() const { return state; }
+    void addNeighbor(int neighborAlive) { neighbors += neighborAlive; }
+    bool getAlive() const { return hp == STATE; }
     void reset() {
-        state = DEAD;
-        hp = 0;
+        hp = -1;
         neighbors = 0;
     }
     void randomizeState() {
-        state = (State)(((double)rand() / (double)RAND_MAX < aliveChanceOnSpawn) * ALIVE);
-        hp = state/ALIVE * STATE;
+        hp = ((double)rand() / (double)RAND_MAX < aliveChanceOnSpawn) * (STATE + 1) - 1;
     }
     void sync() {
-        if (state == ALIVE) {
-            state = (State)(SURVIVAL[neighbors] + DYING);
-        }
-        else if (state == DEAD) {
-            state = (State)(SPAWN[neighbors] * ALIVE);
-            hp = state/ALIVE * STATE;
-        }
-        if (state == DYING) { // do hp decay on same tick that it is demoted to dying
-            if (--hp < 0) state = DEAD;
-        }
-        aliveCells += state == ALIVE;
-        deadCells += state == DEAD;
+        // Branchless by using bool -> int conversion
+        hp = 
+            (hp == STATE) * (hp - 1 + SURVIVAL[neighbors]) + // alive
+            (hp < 0) * (SPAWN[neighbors] * (STATE + 1) - 1) +  // dead
+            (hp >= 0 && hp < STATE) * (hp - 1); // dying
+
+        aliveCells += hp == STATE;
+        deadCells += hp < 0;
     }
     void drawDualColor() const {
-        if (state != DEAD) {
+        if (hp >= 0) {
             draw((Color){
                 (unsigned char)(C2.r + COLOR_OFFSET1.x/(STATE + 1) * (hp + 1)),
                 (unsigned char)(C2.g + COLOR_OFFSET1.y/(STATE + 1) * (hp + 1)),
@@ -176,7 +163,7 @@ public:
         }
     }
     void drawRGBCube() const {
-        if (state != DEAD) {
+        if (hp >= 0) {
             draw((Color){
                 (unsigned char)((float)index.x/cellBounds * 255),
                 (unsigned char)((float)index.y/cellBounds * 255),
@@ -186,9 +173,9 @@ public:
         }
     }
     void drawDualColorDying() const {
-        if (state != DEAD) {
+        if (hp >= 0) {
             Color color = RED;
-            if (state == DYING) {
+            if (hp < STATE) {
                 float percent = (1.0f + hp)/(STATE + 2.0f);
                 unsigned char brightness = (int)(percent * 255);
                 color = (Color){ brightness, brightness, brightness, 255 };
@@ -197,7 +184,7 @@ public:
         }
     }
     void drawSingleColor() const {
-        if (state != DEAD) {
+        if (hp >= 0) {
             float x = 3.0f;
             float base = x/(STATE + x);
             float percent = hp/(STATE + x);
@@ -206,7 +193,7 @@ public:
         }
     }
     void drawDist() const {
-        if (state != DEAD) {
+        if (hp >= 0) {
             float x = 3.0f;
             int cap = cellBounds/2;
             float dist = calc_distance(index, { cap, cap, cap });
@@ -311,7 +298,7 @@ void updateNeighbors(vector<Cell> &cells, int start, int end, const Vector3Int o
                     if (validCellIndex(x, y, z, offsets[i])) {
                         cells[oneIdx]
                             .addNeighbor(cells[threeToOne(x + offsets[i].x, y + offsets[i].y, z + offsets[i].z)]
-                                .getState());
+                                .getAlive());
                     }
                 }
             }
@@ -354,14 +341,6 @@ void updateCells(vector<Cell> &cells) {
         totalOffsets = 26;
     }
     else {
-        // const Vector3Int offsets[] = {
-        //     { 1, 0, 0 },
-        //     { -1, 0, 0 },
-        //     { 0, 1, 0 },
-        //     { 0, -1, 0 },
-        //     { 0, 0, 1 },
-        //     { 0, 0, -1 }
-        // };
         offsets[0] = { 1, 0, 0 };
         offsets[1] = { -1, 0, 0 };
         offsets[2] = { 0, 1, 0 };
