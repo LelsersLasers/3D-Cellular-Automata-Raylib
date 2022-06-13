@@ -538,11 +538,13 @@ Frame loop start        *
 shouldUpdate = true     |
 Create copy of cells    |
                         |
-Draw old cells          |\ Create update thread
-                        | \ Create 'threads' threads to do step 1
-                        | / Wait for all step 1 threads to finish
-                        | \ Create 'threads' threads to do step 2
-                        | / Wait for all step 2 threads to finish
+                        |\ Create 1 thread to manage the updating of the the cells
+Draw old cells          | \ Create 'threads' threads
+Still drawing           |  | Divide cells into 'threads' chunks and each thread does step 1 on that chunk
+                        | / Wait for all step 1 threads to finish and rejoin with update thread
+                        | \ Create 'threads' threads
+                        |  | Divide cells into 'threads' chunks and each thread does step 2 on that chunk
+                        | / Wait for all step 2 threads to finish and rejoin with update thread
                         |/ Rejoin with main thread
 Old cells = new cells   |
 Frame loop ends         *

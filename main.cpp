@@ -617,7 +617,6 @@ int main(void) {
     ToggleKey uTK;
     ToggleKey pTK;
     ToggleKey oTK;
-    // ToggleKey jTK;
 
     int updateSpeed = 8;
     float frame = 0;
@@ -658,7 +657,6 @@ int main(void) {
         if (mTK.down(IsKeyDown('M'))) drawMode = (DrawMode)((drawMode + 1) % 5);
         if (uTK.down(IsKeyDown('U'))) tickMode = (TickMode)((tickMode + 1) % 3);
         if (pTK.down(IsKeyDown('P'))) drawBar = !drawBar;
-        // if (jTK.down(IsKeyDown('J'))) setupFromJSON();
         if (IsKeyDown(KEY_SPACE)) {
             cameraLat = 20.0f;
             cameraLon = 20.0f;
