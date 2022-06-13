@@ -607,9 +607,8 @@ So I don't really understand how multi-file projects work for C++/C, but the C99
 I modified it slightly to work with my C++ compiler and to include the library needed to read the JSON file.
 ```
 SET RAYLIB_PATH=C:\raylib\raylib
-SET JSON_PATH=C:\Users\milla\Desktop\coding\3D-Cellular-Automata-Raylib\json\
 SET CC=g++
-SET CFLAGS=$(RAYLIB_PATH)\src\raylib.rc.data -s -static -Os -Wall -I$(RAYLIB_PATH)\src -I$(JSON_PATH) -Iexternal -DPLATFORM_DESKTOP -std=c++11 -pthread
+SET CFLAGS=$(RAYLIB_PATH)\src\raylib.rc.data -s -static -Os -Wall -I$(RAYLIB_PATH)\src -Iexternal -DPLATFORM_DESKTOP -std=c++11 -pthread
 SET LDFLAGS=-lraylib -lopengl32 -lgdi32 -lwinmm
 cd $(CURRENT_DIRECTORY)
 cmd /c IF EXIST $(NAME_PART).exe del /F $(NAME_PART).exe
