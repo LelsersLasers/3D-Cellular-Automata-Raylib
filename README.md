@@ -1,6 +1,6 @@
 # 3D Cellular Automata [Raylib/C++]
 
-![Main showcase gif](https://github.com/LelsersLasers/3D-Cellular-Automata-Raylib/raw/main/Showcase/MainShowcaseGIFLowRez.PNG)
+![Main showcase gif](https://github.com/LelsersLasers/3D-Cellular-Automata-Raylib/raw/main/Showcase/MainShowcaseGIFLowRez.gif)
 
 - [Quick notes](#quick-notes)
     - [Download](#download)
