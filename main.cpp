@@ -132,7 +132,7 @@ public:
         };
     }
 
-    static void clearCellCounds() {
+    static void clearCellCounts() {
         aliveCells = 1;
         deadCells = 1;
     }
@@ -322,37 +322,9 @@ void updateNeighbors(vector<Cell> &cells, int start, int end, const Vector3Int o
 void updateCells(vector<Cell> &cells) {
     Vector3Int offsets[26];
     size_t totalOffsets;
-    Cell::clearCellCounds();
+    Cell::clearCellCounts();
     if (NEIGHBORHOODS == MOORE) {
-        // const Vector3Int offsetsM[26] = {
-        //     { -1, -1, -1 },
-        //     { -1, -1, 0 },
-        //     { -1, -1, 1 },
-        //     { -1, 0, -1 },
-        //     { -1, 0, 0 },
-        //     { -1, 0, 1 },
-        //     { -1, 1, -1 },
-        //     { -1, 1, 0 },
-        //     { -1, 1, 1 },
-        //     { 0, -1, -1 },
-        //     { 0, -1, 0 },
-        //     { 0, -1, 1 },
-        //     { 0, 0, -1 },
-        //     { 0, 0, 1 },
-        //     { 0, 1, -1 },
-        //     { 0, 1, 0 },
-        //     { 0, 1, 1 },
-        //     { 1, -1, -1 },
-        //     { 1, -1, 0 },
-        //     { 1, -1, 1 },
-        //     { 1, 0, -1 },
-        //     { 1, 0, 0 },
-        //     { 1, 0, 1 },
-        //     { 1, 1, -1 },
-        //     { 1, 1, 0 },
-        //     { 1, 1, 1 }
-        // };
-        // idk how to hard set array so this was best I came up with
+        // idk how to set array to a different array
         offsets[0] = { -1, -1, -1 };
         offsets[1] = { -1, -1, 0 };
         offsets[2] = { -1, -1, 1 };
@@ -485,7 +457,7 @@ void randomizeCells(vector<Cell> &cells) {
             }
         }
     }
-    Cell::clearCellCounds();
+    Cell::clearCellCounts();
 }
 
 
