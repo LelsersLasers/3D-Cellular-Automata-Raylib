@@ -529,7 +529,7 @@ void drawLeftBar(bool drawBounds, bool showHalf, bool paused, DrawMode drawMode,
         DrawableText("- Growth Rate: " + std::to_string((int)((growthRate - 1.0f) * 100)) + "%"),
         DrawableText("- Death Rate: " + std::to_string((int)((deathRate - 1.0f) * 100)) + "%"),
         DrawableText("- Bound size: " + std::to_string(cellBounds)),
-        DrawableText("- threads: " + std::to_string(threads) + " (+ 2)"),
+        DrawableText("- Threads: " + std::to_string(threads) + " (+ 2)"),
         DrawableText("- Camera pos: " + std::to_string((int)abs(cameraLat)) + dirs[0] + ", " + std::to_string(abs((int)cameraLon)) + dirs[1]),
 
         DrawableText("Rules:"),
@@ -591,7 +591,7 @@ int main(void) {
     float cameraLat = 20.0f;
     float cameraLon = 20.0f;
     float cameraRadius = 1.75f * cellSize * cellBounds;
-    const float cameraMoveSpeed = 180.0f/4.0f;
+    const float cameraMoveSpeed = 180.0f/45.0f;
     const float cameraZoomSpeed = cellSize * cellBounds/10.0f;
 
     int ticks = 0;
@@ -605,7 +605,7 @@ int main(void) {
     bool showHalf = false;
     bool drawBar = true;
     DrawMode drawMode = DUAL_COLOR;
-    TickMode tickMode = FAST;
+    TickMode tickMode = MANUAL;
 
     ToggleKey mouseTK;
     ToggleKey enterTK;
@@ -618,8 +618,9 @@ int main(void) {
     ToggleKey pTK;
     ToggleKey oTK;
 
-    int updateSpeed = 8;
+    int updateSpeed = 2;
     float frame = 0;
+    float modeTime = 0;
 
     vector<Cell> cells;
     for (int x = 0; x < cellBounds; x++) {
@@ -638,6 +639,7 @@ int main(void) {
 
         const float delta = GetFrameTime();
         frame += delta;
+        modeTime += delta;
 
         if (IsKeyDown('W') || IsKeyDown(KEY_UP)) cameraLat += cameraMoveSpeed * delta;
         if (IsKeyDown('S') || IsKeyDown(KEY_DOWN)) cameraLat -= cameraMoveSpeed * delta;
@@ -676,6 +678,12 @@ int main(void) {
                 SetWindowSize(screenWidth, screenHeight);
             }
         }
+
+        if (modeTime >= 20) {
+            drawMode = (DrawMode)((drawMode + 1) % 5);
+            while (modeTime >= 20) modeTime -= 20;
+        }
+        cameraLon -= cameraMoveSpeed * delta;
 
         if (cameraLat > 90) cameraLat = 89.99f;
         else if (cameraLat < -90) cameraLat = -89.99f;
