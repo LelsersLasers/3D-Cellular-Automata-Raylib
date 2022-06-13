@@ -529,7 +529,7 @@ void drawLeftBar(bool drawBounds, bool showHalf, bool paused, DrawMode drawMode,
         DrawableText("- Growth Rate: " + std::to_string((int)((growthRate - 1.0f) * 100)) + "%"),
         DrawableText("- Death Rate: " + std::to_string((int)((deathRate - 1.0f) * 100)) + "%"),
         DrawableText("- Bound size: " + std::to_string(cellBounds)),
-        DrawableText("- threads: " + std::to_string(threads) + " (+ 2)"),
+        DrawableText("- Threads: " + std::to_string(threads) + " (+ 2)"),
         DrawableText("- Camera pos: " + std::to_string((int)abs(cameraLat)) + dirs[0] + ", " + std::to_string(abs((int)cameraLon)) + dirs[1]),
 
         DrawableText("Rules:"),
@@ -618,7 +618,7 @@ int main(void) {
     ToggleKey pTK;
     ToggleKey oTK;
 
-    int updateSpeed = 8;
+    int updateSpeed = 5;
     float frame = 0;
 
     vector<Cell> cells;
