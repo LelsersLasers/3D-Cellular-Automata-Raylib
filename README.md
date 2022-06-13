@@ -38,6 +38,9 @@
         - [Single color](#single-color)
         - [Distance from center](#distance-from-center)
     - [Tick modes](#tick-modes)
+        - [Fast](#fast)
+        - [Dynamic](#dynamic)
+        - [Manual](#manual)
 - [Optimizations](#optimizations)
     - [Indexing over iteration](#indexing-over-iteration)
     - [1 dimensional vector](#1-dimensional-over-3-dimensional)
@@ -224,7 +227,7 @@ Keyboard and mouse inputs are only checked once per frame.
 So on lower FPS, the controls will be less responsive.
 Note: holding a key will not cause a rapid toggle. (So if the FPS is low, hold a key to make sure it is down pressed when the inputs are checked.)
 
-#### Camera controls:
+#### Camera controls
 - Q/E : zoom in/out
 - W/S : rotate camera up/down
 - A/D : rotate camera left/right
@@ -233,7 +236,7 @@ Note: holding a key will not cause a rapid toggle. (So if the FPS is low, hold a
 - Note: can also use the arrow keys instead W/A/S/D and page up/down to zoom in/out
 - Camera movement is relative to the delta time between frames
 
-#### Window controls:
+#### Window controls
 - Enter : toggle fullscreen
 - O : toggle true fullscreen
     - The Raylib implementation of fullscreen is not guaranteed to scale correctly
@@ -302,7 +305,7 @@ enum DrawMode {
 ![RGB_CUBE image](https://github.com/LelsersLasers/3D-Cellular-Automata-Raylib/raw/main/Showcase/RGB_CUBE.PNG)
 
 - Maps the cell's position (X, Y, Z) to a color
-    - X * K = red intensity, Y * K = green, Z * K = blue
+    - X * k = red intensity, Y * k = green, Z * k = blue
 - Because there is no shading, it is hard to tell the difference between cells
     - This draw mode makes it easier to see the cells as each cell is (slightly) different color at the cost of not displaying the cell's state
 
@@ -366,7 +369,8 @@ Right now (from my understanding), the calculations are all done on the CPU, and
 This is all abstracted away by Raylib, but if the calculations are done on the GPU, then there will be no need to stream the data to the GPU.
 (Also it seems like most GPUs are faster and can handle parallel calculations much faster/better than CPUs.)
 
-Here are some of the things I have done to improve the speed:
+Here are some of the things I have done to improve the speed of the simulation:
+Note: a lot of this code is modified to illustrate the point, and may not match 1 to 1 with the actual code
 
 ### Indexing over iteration
 
@@ -387,6 +391,7 @@ if (spawn[neighbors]) state = ALIVE;
 It was hard to edit the rules when it was a boolean array, but it was easy to convert a list of spawn numbers to a boolean array like:
 ```
 for (size_t value : rules["spawn"]) spawn[value] = true;
+// rules is the JSON file
 ```
 I did a similar thing for the survival numbers.
 Now, per cell, instead of having to go through an additional loop, it can index a list which is much much faster.
@@ -416,7 +421,7 @@ It seemed to run faster when doing this extra calculation per cell than using a 
 ### Branching at the highest level
 
 Before, when doing the different draw modes, I simply went through all the cells and switched on the draw mode.
-Note: divisor is for the [cross section view](#simulation-controls)
+Note: divisor is for the [cross section view](#simulation-controls).
 ```
 for (int x = 0; x < cellBounds/divisor; x++) {
     for (int y = 0; y < cellBounds; y++) {
@@ -436,7 +441,7 @@ for (int x = 0; x < cellBounds/divisor; x++) {
 ```
 However, this meant that it had to compare/switch/branch on drawMode for every cell,
 but the value it switched on would not change, so redoing the comparison/switch/branching for every cell was excessive and slow.
-Moving the switch outside of the for loop made it so that it only had to compare/branch once (at the code of repeated code).
+Moving the switch outside of the for loop made it so that it only had to compare/branch once (at the cost of repeated code).
 ```
 switch (drawMode) {
     case DUAL_COLOR:
@@ -466,23 +471,47 @@ I am sure at what point this is true, but it seemed to speed up the simulation, 
 
 For example, I replaced (example from earlier): 
 ```
+if (state == ALIVE) {
+    if (!survival[neighbors]) {
+        state = Dying;
+        hp--;
+    }
+}
 else if (state == DEAD) {
     if (spawn[neighbors]) {
-        state = ALIVE; // state is the cell's status as alive, dead, or dying
+        state = ALIVE;
         hp = STATE; // STATE is the amount of ticks the cell lives as defined in rules.json
+    }
+}
+else if (state == DYING) {
+    hp--;
+    if (hp < 0) {
+        state = DEAD;
     }
 }
 ```
 With:
 ```
-else if (state == DEAD) {
-    // the way enum State was set up: alive = 2, dying = 1, dead = 0
-    // also makes use of implicit bool -> int conversion
-    state = (State)(spawn[neighbors] * ALIVE);
-    hp = state/ALIVE * STATE;
-}
+hp = 
+    (hp == STATE) * (hp - 1 + SURVIVAL[neighbors]) + // alive
+    (hp < 0) * (SPAWN[neighbors] * (STATE + 1) - 1) +  // dead
+    (hp >= 0 && hp < STATE) * (hp - 1); // dying
 ```
-Again, not really sure if it is better, and this code is still within a branch.
+This works by eliminating the need for the 'state' variable as it was directly related to its hp where:
+- When hp == STATE, state would be ALIVE
+- When hp < 0, state would be DEAD
+- And anything else (hp >= 0 && hp < STATE), state would be DYING
+This allowed the code to simplify into 1 line, without branching, by converting each if statement to a int
+and because only 1 of the 3 states was possible, only 1 of the statements will be 1 and the rest will be 0,
+effectively making hp equal just that 1 case.
+Example - if STATE = 6, and hp = 3, then the cell is dying:
+```
+(3 == 6) * (3 - 1 + SURVIVAL[neighbors])    -> (0) * (whatever) -> 0
+(3 < 0) * (SPAWN[neighbors] * (6 + 1) - 1)  -> (0) * (whatever) -> 0
+(3 >= 0 && 3 < 6) * (3 - 1)                 -> (1) * (3 - 1)    -> 2
+hp = 0 + 0 + 2 = 2;
+(2 >= 0 && 2 < 6) -> still dying
+```
 
 
 ### Multithreading
@@ -543,11 +572,12 @@ Frame loop start        *
 shouldUpdate = true     |
 Create copy of cells    |
                         |
-                        |\ Create 1 thread to manage the updating of the the cells
-Draw old cells          | \ Create 'threads' threads
+                        |\ Create 1 thread
+Draw old cells          | | This thread manage the other threads to update the cells
+Still drawing           | \ Create 'threads' threads
 Still drawing           |  | Divide cells into 'threads' chunks and each thread does step 1 on that chunk
-                        | / Wait for all step 1 threads to finish and rejoin with update thread
-                        | \ Create 'threads' threads
+Still drawing           | / Wait for all step 1 threads to finish and rejoin with update thread
+Etc                     | \ Create 'threads' threads
                         |  | Divide cells into 'threads' chunks and each thread does step 2 on that chunk
                         | / Wait for all step 2 threads to finish and rejoin with update thread
                         |/ Rejoin with main thread
