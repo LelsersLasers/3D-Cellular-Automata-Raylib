@@ -1,9 +1,5 @@
 # Possible Ideas
 
-Cleaning:
-- 'hard set' offsets in updateCells()
-- Where can use branchless? Is it faster?
-
 Possible/advanced/likely won't happen ideas:
 - On live/onscreen reload from JSON?
     - Colors, draw modes, etc?
