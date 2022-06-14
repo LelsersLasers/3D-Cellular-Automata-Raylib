@@ -21,7 +21,6 @@
 - [How to change the rules and settings (rules.json)](#how-to-change-the-rules-and-settings)
     - [Changing the rules](#changing-the-rules)
     - [Changing the settings](#changing-the-settings)
-        - [cellSize](#cellsize)
         - [cellBounds](#cellbounds)
         - [aliveChanceOnSpawn](#alivechanceonspawn)
         - [threads](#threads)
@@ -181,18 +180,11 @@ The explanations for these rules are [above](#cell-rules-explained) (as well as 
 
 Defaults:
 ```
-"cellSize": 1.0,
 "cellBounds": 96,
 "aliveChanceOnSpawn": 0.15,
 "threads": 8,
 "targetFPS": 15
 ```
-
-#### cellSize
-- The size (length of the edge of cube) for each cell in the simulation
-- Used by Raylib
-- Changing this should have almost no effect on the simulation as the camera position is relative to this number
-- Type: float
 
 #### cellBounds
 - The number of cells in each direction (x, y, z)

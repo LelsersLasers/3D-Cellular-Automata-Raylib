@@ -49,7 +49,6 @@ bool SPAWN[27];
 int STATE;
 NeighborType NEIGHBORHOODS;
 
-float cellSize;
 int cellBounds;
 size_t totalCells;
 float aliveChanceOnSpawn;
@@ -113,15 +112,15 @@ private:
     static int aliveCells;
     static int deadCells;
 
-    void draw(Color color) const { DrawCube(pos, cellSize, cellSize, cellSize, color); }
+    void draw(Color color) const { DrawCube(pos, 1.0f, 1.0f, 1.0f, color); }
 
 public:
     Cell(Vector3Int index) {
         this->index = index;
         pos = {
-            cellSize * (index.x - (cellBounds - 1.0f) / 2),
-            cellSize * (index.y - (cellBounds - 1.0f) / 2),
-            cellSize * (index.z - (cellBounds - 1.0f) / 2)
+            index.x - (cellBounds - 1.0f) / 2,
+            index.y - (cellBounds - 1.0f) / 2,
+            index.z - (cellBounds - 1.0f) / 2
         };
     }
 
@@ -251,7 +250,6 @@ void setupFromJSON() {
         if (rules["neighborhood"] == "VN") NEIGHBORHOODS = VON_NEUMANN;
         else NEIGHBORHOODS = MOORE;
 
-        cellSize = rules["cellSize"];
         cellBounds = rules["cellBounds"];
         totalCells = cellBounds * cellBounds * cellBounds;
         aliveChanceOnSpawn = rules["aliveChanceOnSpawn"];
@@ -508,9 +506,8 @@ void draw(Camera3D camera, const vector<Cell> &cells, bool drawBounds, bool draw
             drawCells(cells, (int)showHalf + 1, drawMode);
 
             if (drawBounds) {
-                int outlineSize = cellSize * cellBounds;
-                if (showHalf) DrawCubeWires((Vector3){ -outlineSize/4.0f, 0, 0 }, outlineSize/2, outlineSize, outlineSize, BLUE);
-                else DrawCubeWires((Vector3){ 0, 0, 0 }, outlineSize, outlineSize, outlineSize, BLUE);
+                if (showHalf) DrawCubeWires((Vector3){ -cellBounds/4.0f, 0, 0 }, cellBounds/2.0f, cellBounds, cellBounds, BLUE);
+                else DrawCubeWires((Vector3){ 0, 0, 0 }, cellBounds, cellBounds, cellBounds, BLUE);
             }
         EndMode3D();
         if (drawBar) {
@@ -541,9 +538,9 @@ int main(void) {
 
     float cameraLat = 20.0f;
     float cameraLon = 20.0f;
-    float cameraRadius = 1.75f * cellSize * cellBounds;
+    float cameraRadius = 1.75f * cellBounds;
     const float cameraMoveSpeed = 180.0f/4.0f;
-    const float cameraZoomSpeed = cellSize * cellBounds/10.0f;
+    const float cameraZoomSpeed = cellBounds/10.0f;
 
     int ticks = 0;
     int lastAliveCells = Cell::getAliveCells();
@@ -611,7 +608,7 @@ int main(void) {
         if (IsKeyDown(KEY_SPACE)) {
             cameraLat = 20.0f;
             cameraLon = 20.0f;
-            cameraRadius = 1.75f * cellSize * cellBounds;
+            cameraRadius = 1.75f * cellBounds;
         }
         if (enterTK.down(IsKeyPressed(KEY_ENTER))) {
             if (GetScreenWidth() == screenWidth) MaximizeWindow();
@@ -633,7 +630,7 @@ int main(void) {
         if (cameraLon > 180) cameraLon -= 360;
         else if (cameraLon < -180) cameraLon += 360;
 
-        if (cameraRadius < cellSize) cameraRadius = cellSize;
+        if (cameraRadius < 1) cameraRadius = 1.0f;
         camera.position = (Vector3){
             cameraRadius * cos(degreesToRadians(cameraLat)) * cos(degreesToRadians(cameraLon)),
             cameraRadius * cos(degreesToRadians(cameraLat)) * sin(degreesToRadians(cameraLon)),

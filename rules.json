@@ -3,7 +3,6 @@
     "spawn": [4, 6, 8, 9],
     "state": 10,
     "neighborhood": "M",
-    "cellSize": 1.0,
     "cellBounds": 96,
     "aliveChanceOnSpawn": 0.15,
     "threads": 8,
