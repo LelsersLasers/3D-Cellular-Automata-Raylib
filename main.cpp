@@ -621,7 +621,7 @@ int main(void) {
         if (pTK.down(IsKeyDown('P'))) drawBar = !drawBar;
         if (jTK.down(IsKeyDown('J'))) {
             int oldBounds = loadFromJSON();
-            vector<Cell> cells3 = createCells();
+            cells2 = createCells();
             int start = (cellBounds - oldBounds) / 2;
             Vector3Int offset = { start, start, start };
             for (int x = 0; x < oldBounds; x++) {
@@ -629,12 +629,12 @@ int main(void) {
                     for (int z = 0; z < oldBounds; z++) {
                         if (validCellIndex(x, y, z, offset)) {
                             size_t oldOneIdx = x * oldBounds * oldBounds + y * oldBounds  + z;
-                            cells3[threeToOne(x + offset.x, y + offset.x, z + offset.z)].setHp(cells[oldOneIdx].getHp());
+                            cells2[threeToOne(x + offset.x, y + offset.x, z + offset.z)].setHp(cells[oldOneIdx].getHp());
                         }
                     }
                 }
             }
-            cells = vector<Cell>(cells3);
+            cells = vector<Cell>(cells2);
             cameraRadius = 1.75f * cellBounds;
         }
         if (IsKeyDown(KEY_SPACE)) {
