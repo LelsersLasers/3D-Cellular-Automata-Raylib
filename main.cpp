@@ -245,12 +245,12 @@ int loadFromJSON() {
         reader >> rules;
         reader.close();
 
-        for (size_t value : rules["survival"]) {
-            SURVIVAL[value] = true;
-        }
-        for (size_t value : rules["spawn"]) {
-            SPAWN[value] = true;
-        }
+        for (size_t i = 0; i < 27; i++) SURVIVAL[i] = false;
+        for (size_t i = 0; i < 27; i++) SPAWN[i] = false;
+
+        for (size_t value : rules["survival"]) SURVIVAL[value] = true;
+        for (size_t value : rules["spawn"]) SPAWN[value] = true;
+
         STATE = rules["state"];
         if (rules["neighborhood"] == "VN") NEIGHBORHOODS = VON_NEUMANN;
         else NEIGHBORHOODS = MOORE;
@@ -468,6 +468,7 @@ void drawLeftBar(bool drawBounds, bool showHalf, bool paused, DrawMode drawMode,
         DrawableText("- FPS: " + std::to_string(GetFPS())),
         DrawableText("- Ticks per sec: " + std::to_string(tickMode == FAST ? GetFPS() : updateSpeed)),
         DrawableText("- Total ticks ('time'): " + std::to_string(ticks)),
+        DrawableText("- Total alive cells: " + std::to_string(Cell::getAliveCells())),
         DrawableText("- Growth Rate: " + std::to_string((int)((growthRate - 1.0f) * 100)) + "%"),
         DrawableText("- Death Rate: " + std::to_string((int)((deathRate - 1.0f) * 100)) + "%"),
         DrawableText("- Bound size: " + std::to_string(cellBounds)),
