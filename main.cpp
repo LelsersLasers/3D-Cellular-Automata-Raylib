@@ -99,9 +99,11 @@ public:
     }
 };
 
+
 float calc_distance(Vector3Int a, Vector3Int b) {
     return sqrt(pow((float)a.x - b.x, 2) + pow((float)a.y - b.y, 2) + pow((float)a.z - b.z, 2));
 }
+
 
 class Cell {
 private:
@@ -133,6 +135,8 @@ public:
 
     void clearNeighbors() { neighbors = 0; }
     void addNeighbor(int neighborAlive) { neighbors += neighborAlive; }
+    int getHp() const { return hp; }
+    void setHp(int hp) { this->hp = hp; }
     bool getAlive() const { return hp == STATE; }
     void reset() {
         hp = -1;
@@ -206,6 +210,7 @@ public:
 int Cell::aliveCells = 1;
 int Cell::deadCells = 1;
 
+
 string textFromEnum(NeighborType nt) {
     switch (nt) {
         case MOORE: return "Moore";
@@ -232,8 +237,8 @@ string textFromEnum(TickMode tm) {
     return "";
 }
 
-
-void setupFromJSON() {
+int loadFromJSON() {
+    std::cout << "Loading from JSON..." << std::endl;
     try {
         json rules;
         std::ifstream reader(JSON_FILE);
@@ -249,12 +254,16 @@ void setupFromJSON() {
         STATE = rules["state"];
         if (rules["neighborhood"] == "VN") NEIGHBORHOODS = VON_NEUMANN;
         else NEIGHBORHOODS = MOORE;
-
+        
+        int oldBounds = cellBounds;
         cellBounds = rules["cellBounds"];
         totalCells = cellBounds * cellBounds * cellBounds;
         aliveChanceOnSpawn = rules["aliveChanceOnSpawn"];
         threads = rules["threads"];
         targetFPS = rules["targetFPS"];
+
+        std::cout << "Finished loading from JSON..." << std::endl;
+        return oldBounds;
     }
     catch (std::exception& e) {
         std::cout << "Error: " << e.what() << std::endl;
@@ -263,7 +272,6 @@ void setupFromJSON() {
         exit(EXIT_FAILURE);
     }
 }
-
 
 float degreesToRadians(float degrees) {
     return degrees * PI / 180.0f;
@@ -422,22 +430,6 @@ void drawCells(const vector<Cell> &cells, int divisor, DrawMode drawMode) {
     }
 }
 
-
-void randomizeCells(vector<Cell> &cells) {
-    for (size_t i = 0; i < totalCells; i++) {
-        cells[i].reset();
-    }
-    for (int x = cellBounds/3.0f; x < cellBounds * 2.0f/3.0f; x++) {
-        for (int y = cellBounds/3.0f; y < cellBounds * 2.0f/3.0f; y++) {
-            for (int z = cellBounds/3.0f; z < cellBounds * 2.0f/3.0f; z++) {
-                cells[threeToOne(x, y, z)].randomizeState();
-            }
-        }
-    }
-    Cell::clearCellCounts();
-}
-
-
 void drawLeftBar(bool drawBounds, bool showHalf, bool paused, DrawMode drawMode, TickMode tickMode, int updateSpeed, int ticks, float growthRate, float deathRate, float cameraLat, float cameraLon) {
     char dirs[2] = {
         (cameraLat > 0 ? 'N' : 'S'),
@@ -466,6 +458,7 @@ void drawLeftBar(bool drawBounds, bool showHalf, bool paused, DrawMode drawMode,
         DrawableText("- Mouse click : pause/unpause " + (string)(paused ? "(paused)" : "(running)")),
         DrawableText("- Space : reset camera"),
         DrawableText("- Enter : toggle fullscreen"),
+        DrawableText("- J : reload from JSON"),
         DrawableText("- O : toggle true fullscreen (not reccomended)"),
         DrawableText("- M : change between draw modes [" + textFromEnum(drawMode) + "]"),
         DrawableText("- U : change between tick modes [" + textFromEnum(tickMode) + "]"),
@@ -498,7 +491,6 @@ void drawLeftBar(bool drawBounds, bool showHalf, bool paused, DrawMode drawMode,
     }
 }
 
-
 void draw(Camera3D camera, const vector<Cell> &cells, bool drawBounds, bool drawBar, bool showHalf, bool paused, DrawMode drawMode, TickMode tickMode, int updateSpeed, int ticks, float growthRate, float deathRate, float cameraLat, float cameraLon) {
     BeginDrawing();
         ClearBackground(RAYWHITE);
@@ -517,6 +509,35 @@ void draw(Camera3D camera, const vector<Cell> &cells, bool drawBounds, bool draw
 }
 
 
+void randomizeCells(vector<Cell> &cells) {
+    for (size_t i = 0; i < totalCells; i++) {
+        cells[i].reset();
+    }
+    for (int x = cellBounds/3.0f; x < cellBounds * 2.0f/3.0f; x++) {
+        for (int y = cellBounds/3.0f; y < cellBounds * 2.0f/3.0f; y++) {
+            for (int z = cellBounds/3.0f; z < cellBounds * 2.0f/3.0f; z++) {
+                cells[threeToOne(x, y, z)].randomizeState();
+            }
+        }
+    }
+    Cell::clearCellCounts();
+}
+
+
+vector<Cell> createCells() {
+    vector<Cell> cells;
+    cells.reserve(totalCells);
+    for (int x = 0; x < cellBounds; x++) {
+        for (int y = 0; y < cellBounds; y++) {
+            for (int z = 0; z < cellBounds; z++) {
+                cells.push_back(Cell({ x, y, z }));
+            }
+        }
+    }
+    return cells;
+}
+
+
 int main(void) {
 
     srand(time(NULL));
@@ -527,7 +548,7 @@ int main(void) {
     InitWindow(screenWidth, screenHeight, "3D Cellular Automata with Raylib");
     SetWindowState(FLAG_WINDOW_RESIZABLE);
 
-    setupFromJSON();
+    loadFromJSON();
 
     Camera3D camera = { 0 };
     camera.position = (Vector3){ 10.0f, 10.0f, 10.0f };
@@ -565,21 +586,14 @@ int main(void) {
     ToggleKey uTK;
     ToggleKey pTK;
     ToggleKey oTK;
+    ToggleKey jTK;
 
     int updateSpeed = 5;
     float frame = 0;
 
-    vector<Cell> cells;
-    for (int x = 0; x < cellBounds; x++) {
-        for (int y = 0; y < cellBounds; y++) {
-            for (int z = 0; z < cellBounds; z++) {
-                cells.push_back(Cell({ x, y, z }));
-            }
-        }
-    }
+    vector<Cell> cells = createCells();
     randomizeCells(cells);
-    vector<Cell> cells2 = cells;
-    cells2.reserve(totalCells);
+    vector<Cell> cells2 = vector<Cell>(cells);
 
     // Main game loop
     while (!WindowShouldClose()) {
@@ -605,6 +619,24 @@ int main(void) {
         if (mTK.down(IsKeyDown('M'))) drawMode = (DrawMode)((drawMode + 1) % 5);
         if (uTK.down(IsKeyDown('U'))) tickMode = (TickMode)((tickMode + 1) % 3);
         if (pTK.down(IsKeyDown('P'))) drawBar = !drawBar;
+        if (jTK.down(IsKeyDown('J'))) {
+            int oldBounds = loadFromJSON();
+            vector<Cell> cells3 = createCells();
+            int start = (cellBounds - oldBounds) / 2;
+            Vector3Int offset = { start, start, start };
+            for (int x = 0; x < oldBounds; x++) {
+                for (int y = 0; y < oldBounds; y++) {
+                    for (int z = 0; z < oldBounds; z++) {
+                        if (validCellIndex(x, y, z, offset)) {
+                            size_t oldOneIdx = x * oldBounds * oldBounds + y * oldBounds  + z;
+                            cells3[threeToOne(x + offset.x, y + offset.x, z + offset.z)].setHp(cells[oldOneIdx].getHp());
+                        }
+                    }
+                }
+            }
+            cells = vector<Cell>(cells3);
+            cameraRadius = 1.75f * cellBounds;
+        }
         if (IsKeyDown(KEY_SPACE)) {
             cameraLat = 20.0f;
             cameraLon = 20.0f;

@@ -169,7 +169,7 @@ A cell can be in one of 3 states: alive, dying, or dead.
 
 The rules and settings for the simulation can be found in rules.json.
 When editing the file, make sure that all the keys/variables are still there, and that the types of the values (number, list of numbers, string) are not changed.
-The simulation loads the settings from the file when it is started, so the simulation must be restarted to see any changes to rules.json.
+The simulation loads the settings from the file when it is started, but they can be [reloaded by pressing J](#simulation-controls).
 
 ### Changing the rules
 
@@ -238,6 +238,8 @@ Note: holding a key will not cause a rapid toggle. (So if the FPS is low, hold a
 - R : re-randomize cells
     - See [aliveChanceOnSpawn](#alivechanceonspawn) for more info
     - Note: key intentionally does not have 'rapid toggle protection'
+- J : reload from JSON
+    - See [rules.json](#how-to-change-the-rules-and-settings) for more info
 - B : show/hide bounds
     - Draws a blue outline of the simulation bounds
     - If cross section mode is on, it will draw the outline around just the drawn cells
@@ -391,8 +393,7 @@ Now, per cell, instead of having to go through an additional loop, it can index 
 
 ### 1 dimensional over 3 dimensional
 
-Technically, there is no reason to use a vector over an array.
-However, I did it this way because later I might add the ability to change the cell bounds on demand.
+I used a vector over an array so the bounds could be changed without the simulation needing to be restarted.
 My understanding is that a vector and an array are the same speed except for allocating memory and I only have to do that at the start.
 
 However, before, I had a vector of vectors of vectors of cells:
@@ -407,7 +408,7 @@ size_t threeToOne(int x, int y, int z) {
 }
 ```
 It seemed to run faster when doing this extra calculation per cell than using a vector of vectors of vectors of cells.
-(Not sure if was actually worth.)
+(Not sure if was actually worth.) The main downside is that code/math when reloading from the JSON and changing the bounds is a bit more complicated as every cell has to shuffle around.
 
 
 ### Branching at the highest level

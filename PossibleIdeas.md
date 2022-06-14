@@ -5,9 +5,8 @@ Cleaning:
 - Where can use branchless? Is it faster?
 
 Possible/advanced/likely won't happen ideas:
-- On demand changes for bound, cell rules, (colors, etc)?
-    - Or maybe live/key bind to reload from JSON?
-        - Only complication would be cell bounds
+- On live/onscreen reload from JSON?
+    - Colors, draw modes, etc?
 - Menu screens, etc?
 - Shaders to make cells easier to see/tell apart?
 - Further improve performance?
