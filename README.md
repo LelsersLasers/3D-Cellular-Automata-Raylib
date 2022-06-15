@@ -18,7 +18,7 @@
     - [State](#state)
     - [Neighborhoods](#neighborhoods)
     - [Examples](#some-examples)
-- [How to change the rules and settings (rules.json)](#how-to-change-the-rules-and-settings)
+- [How to change the rules, colors, and settings (options.json)](#how-to-change-the-rules-colors-and-settings)
     - [Changing the rules](#changing-the-rules)
     - [Changing the settings](#changing-the-settings)
         - [cellBounds](#cellbounds)
@@ -54,7 +54,8 @@
 ## Quick notes
 
 ### Download
-To quickly download the latest executable and needed files, click [here](https://github.com/LelsersLasers/3D-Cellular-Automata-Raylib/raw/main/3D-Cellular-Automata-Raylib.zip).
+To quickly download the latest executable and needed files (main.exe and the options.json),
+click [here](https://github.com/LelsersLasers/3D-Cellular-Automata-Raylib/raw/main/3D-Cellular-Automata-Raylib.zip).
 Note: this was only build for Windows, but all libraries used are fully cross platform (I think).
 Information about compiling for non-Windows can be found [here](compiling).
 
@@ -147,7 +148,7 @@ A cell can be in one of 3 states: alive, dying, or dead.
     -6 possible neighbors
 
 ### Some examples
-(Note: can just copy/replace in rules.json)
+(Note: can just copy/replace in options.json)
 
 - Slow build up: <9-18/5-7,12-13,15/6/M>
     ```
@@ -165,9 +166,9 @@ A cell can be in one of 3 states: alive, dying, or dead.
     ```
 
 
-## How to change the rules and settings
+## How to change the rules, colors, and settings
 
-The rules and settings for the simulation can be found in rules.json.
+The rules, colors, and settings for the simulation can be found in options.json.
 When editing the file, make sure that all the keys/variables are still there, and that the types of the values (number, list of numbers, string) are not changed.
 The simulation loads the settings from the file when it is started, but they can be [reloaded by pressing J](#simulation-controls).
 
@@ -176,14 +177,29 @@ The simulation loads the settings from the file when it is started, but they can
 The first 4 keys are the rules for the simulation.
 The explanations for these rules are [above](#cell-rules-explained) (as well as their types).
 
+### Changing the colors
+
+Defaults:
+```
+    "dualColorAlive": [0, 228, 48],
+    "dualColorDead": [230, 41, 55],
+    "dualColorDyingAlive": [230, 41, 55],
+    "singleColorAlive": [255, 20, 20],
+    "centerDistMax": [255, 255, 255],
+```
+
+See [draw modes](#draw-modes) for more information about how the colors work.
+The values are a list of three numbers, representing the RGB values of the color where 255 = 100% color intensity, and 0 = 0%.
+(So [255, 0, 0] is red, [0, 0, 0] is black, [255, 255, 255] is white, etc.)
+
 ### Changing the settings
 
 Defaults:
 ```
-"cellBounds": 96,
-"aliveChanceOnSpawn": 0.15,
-"threads": 8,
-"targetFPS": 15
+    "cellBounds": 96,
+    "aliveChanceOnSpawn": 0.15,
+    "threads": 8,
+    "targetFPS": 15
 ```
 
 #### cellBounds
@@ -239,7 +255,7 @@ Note: holding a key will not cause a rapid toggle. (So if the FPS is low, hold a
     - See [aliveChanceOnSpawn](#alivechanceonspawn) for more info
     - Note: key intentionally does not have 'rapid toggle protection'
 - J : reload from JSON
-    - See [rules.json](#how-to-change-the-rules-and-settings) for more info
+    - See [options.json](#how-to-change-the-rules-and-settings) for more info
 - B : show/hide bounds
     - Draws a blue outline of the simulation bounds
     - If cross section mode is on, it will draw the outline around just the drawn cells
@@ -282,17 +298,27 @@ enum DrawMode {
     SINGLE_COLOR = 3,
     CENTER_DIST = 4
 };
+
+// Color settings in options.json
+"dualColorAlive": [R, G, B],
+"dualColorDead": [R, G, B],
+"dualColorDyingAlive": [R, G, B],
+"singleColorAlive": [R, G, B],
+"centerDistMax": [R, G, B],
 ```
+
+In all draw modes, fully dead cells are not rendered.
 
 #### Dual color
 
 ![DUAL_COLOR image](https://github.com/LelsersLasers/3D-Cellular-Automata-Raylib/raw/main/Showcase/DUAL_COLOR.PNG)
 
-- Displays the cell's state as a color from green to red
-- Green = alive
-- Anything else: dying
-    - Closer to green = more time to live
-    - Closer to red = closer to dead
+- Displays the cell's state as a scale from color from dualColorAlive to dualColorDead
+- If the cell is dualColorAlive, it is fully alive
+- Anything else: the cell is dying
+    - Closer to dualColorAlive = more time to live
+    - Closer to dualColorDead = closer to dead
+
 
 #### RGB
 
@@ -307,7 +333,7 @@ enum DrawMode {
 
 ![DUAL_COLOR_DYING image](https://github.com/LelsersLasers/3D-Cellular-Automata-Raylib/raw/main/Showcase/DUAL_COLOR_DYING.PNG)
 
-- Alive = red
+- Alive = dualColorDyingAlive
 - Dying = scales from white to black based on how close the cell is to dead
 - Easiest to see the state/difference between alive and dead cells at the cost of your eyes
 
@@ -315,14 +341,15 @@ enum DrawMode {
 
 ![SINGLE_COLOR image](https://github.com/LelsersLasers/3D-Cellular-Automata-Raylib/raw/main/Showcase/SINGLE_COLOR.PNG)
 
-- Like dual color, but instead of scaling from green to red, it scales from red to dark red/black
+- Like dual color, but instead of scaling from dualColorAlive to dualColorDead, it scales from singleColorAlive to dark/black
 
 #### Distance from center
 
 ![CENTER_DIST image](https://github.com/LelsersLasers/3D-Cellular-Automata-Raylib/raw/main/Showcase/CENTER_DIST.PNG)
 
-- A scale of how far each cell is from the center of the simulation from black to white
+- A scale of how far each cell is from the center of the simulation from black to centerDistMax
 - Like RGB, it is easier to see the difference between cells at the cost of not displaying the cell's state
+    - It is likely easier on the eyes than RGB, but there are cells that have the same color
 
 ### Tick modes
 
@@ -473,7 +500,7 @@ if (state == ALIVE) {
 else if (state == DEAD) {
     if (spawn[neighbors]) {
         state = ALIVE;
-        hp = STATE; // STATE is the amount of ticks the cell lives as defined in rules.json
+        hp = STATE; // STATE is the amount of ticks the cell lives as defined in options.json
     }
 }
 else if (state == DYING) {
@@ -556,7 +583,7 @@ the timing of step 1 for each cell is not important (as long as step 1 comes bef
 In step 2, there is no information needed from other cells, so again the order is not important (as long as step 2 comes after step 1).
 
 This means that step 1, which goes through every cell, can actually go through every cell in parallel.
-The amount of threads used for this is defined in the [threads](#threads) variable in rules.json.
+The amount of threads used for this is defined in the [threads](#threads) variable in options.json.
 
 On a frame where update will be called, the flow is as follows:
 ```
