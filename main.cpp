@@ -49,19 +49,18 @@ bool SPAWN[27];
 int STATE;
 NeighborType NEIGHBORHOODS;
 
+Color dualColorAlive;
+Color dualColorDead;
+Vector3 colorOffset;
+Color dualColorDyingAlive;
+Color singleColorAlive;
+Color centerDistMax;
+
 int cellBounds;
 size_t totalCells;
 float aliveChanceOnSpawn;
 size_t threads;
 int targetFPS;
-
-const Color C1 = GREEN;
-const Color C2 = RED;
-const Vector3 COLOR_OFFSET1 = {
-    (float)(C1.r - C2.r),
-    (float)(C1.g - C2.g),
-    (float)(C1.b - C2.b)
-};
 
 
 class ToggleKey {
@@ -158,9 +157,9 @@ public:
     void drawDualColor() const {
         if (hp >= 0) {
             draw((Color){
-                (unsigned char)(C2.r + COLOR_OFFSET1.x/(STATE + 1) * (hp + 1)),
-                (unsigned char)(C2.g + COLOR_OFFSET1.y/(STATE + 1) * (hp + 1)),
-                (unsigned char)(C2.b + COLOR_OFFSET1.z/(STATE + 1) * (hp + 1)),
+                (unsigned char)(dualColorDead.r + colorOffset.x/(STATE + 1) * (hp + 1)),
+                (unsigned char)(dualColorDead.g + colorOffset.y/(STATE + 1) * (hp + 1)),
+                (unsigned char)(dualColorDead.b + colorOffset.z/(STATE + 1) * (hp + 1)),
                 255
             });
         }
@@ -177,10 +176,10 @@ public:
     }
     void drawDualColorDying() const {
         if (hp >= 0) {
-            Color color = RED;
+            Color color = dualColorDyingAlive;
             if (hp < STATE) {
-                float percent = (1.0f + hp)/(STATE + 2.0f);
-                unsigned char brightness = (int)(percent * 255);
+                float intensity = (1.0f + hp)/(STATE + 2.0f);
+                unsigned char brightness = (int)(intensity * 255);
                 color = (Color){ brightness, brightness, brightness, 255 };
             }
             draw(color);
@@ -188,22 +187,26 @@ public:
     }
     void drawSingleColor() const {
         if (hp >= 0) {
-            float x = 3.0f;
-            float base = x/(STATE + x);
-            float percent = hp/(STATE + x);
-            unsigned char brightness = (int)((base + percent) * 255);
-            draw((Color){ brightness, 20, 20, 255 });
+            float intensity = 3.0f/(STATE + 3.0f) + hp/(STATE + 3.0f);
+            draw((Color){
+                (unsigned char)(intensity * singleColorAlive.r),
+                (unsigned char)(intensity * singleColorAlive.g),
+                (unsigned char)(intensity * singleColorAlive.b),
+                255
+            });
         }
     }
     void drawDist() const {
         if (hp >= 0) {
-            float x = 3.0f;
             int cap = cellBounds/2;
             float dist = calc_distance(index, { cap, cap, cap });
-            float base = x/(cap * sqrt(3.0f) + x);
-            float percent = dist/(cap * sqrt(3.0f) + x);
-            unsigned char brightness = (int)((base + percent) * 255);
-            draw((Color){ brightness, brightness, brightness, 255 });
+            float intensity = 2.0f/(cap * sqrt(3.0f) + 2.0f) + dist/(cap * sqrt(3.0f) + 2.0f);
+            draw((Color){
+                (unsigned char)(intensity * centerDistMax.r),
+                (unsigned char)(intensity * centerDistMax.g),
+                (unsigned char)(intensity * centerDistMax.b),
+                255
+            });
         }
     }
 };
@@ -254,6 +257,42 @@ int loadFromJSON() {
         STATE = rules["state"];
         if (rules["neighborhood"] == "VN") NEIGHBORHOODS = VON_NEUMANN;
         else NEIGHBORHOODS = MOORE;
+
+        dualColorAlive = {
+            rules["dualColorAlive"][0],
+            rules["dualColorAlive"][1],
+            rules["dualColorAlive"][2],
+            255
+        };
+        dualColorDead = {
+            rules["dualColorDead"][0],
+            rules["dualColorDead"][1],
+            rules["dualColorDead"][2],
+            255
+        };
+        colorOffset = {
+            (float)(dualColorAlive.r - dualColorDead.r),
+            (float)(dualColorAlive.g - dualColorDead.g),
+            (float)(dualColorAlive.b - dualColorDead.b)
+        };
+        dualColorDyingAlive = {
+            rules["dualColorDyingAlive"][0],
+            rules["dualColorDyingAlive"][1],
+            rules["dualColorDyingAlive"][2],
+            255
+        };
+        singleColorAlive = {
+            rules["singleColorAlive"][0],
+            rules["singleColorAlive"][1],
+            rules["singleColorAlive"][2],
+            255
+        };
+        centerDistMax = {
+            rules["centerDistMax"][0],
+            rules["centerDistMax"][1],
+            rules["centerDistMax"][2],
+            255
+        };
         
         int oldBounds = cellBounds;
         cellBounds = rules["cellBounds"];

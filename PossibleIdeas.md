@@ -1,5 +1,11 @@
 # Possible Ideas
 
+Color options in JSON:
+- Update README
+
+rules.json -> options.json
+- Update README
+
 Possible/advanced/likely won't happen ideas:
 - On live/onscreen reload from JSON?
     - Colors, draw modes, etc?
