@@ -17,7 +17,7 @@ using json = nlohmann::json;
 
 #define PI 3.14159265358979323846f
 
-#define JSON_FILE "rules.json"
+#define JSON_FILE "options.json"
 
 
 enum NeighborType {
@@ -306,7 +306,7 @@ int loadFromJSON() {
     }
     catch (std::exception& e) {
         std::cout << "Error: " << e.what() << std::endl;
-        std::cout << "JSON 'rules.json' not found or invalid." << std::endl;
+        std::cout << "JSON '" << JSON_FILE << "' not found or invalid." << std::endl;
         std::cout << "Exiting..." << std::endl;
         exit(EXIT_FAILURE);
     }
