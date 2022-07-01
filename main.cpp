@@ -154,6 +154,11 @@ public:
         aliveCells += hp == STATE;
         deadCells += hp < 0;
     }
+    void jsonStateUpdate(int oldState) {
+        hp = 
+            (hp < 0) * -1 + // stay dead
+            (hp >= 0) * (hp * (float)STATE/oldState); // scale hp
+    }
     void drawDualColor() const {
         if (hp >= 0) {
             draw((Color){
@@ -240,7 +245,7 @@ string textFromEnum(TickMode tm) {
     return "";
 }
 
-int loadFromJSON() {
+void loadFromJSON() {
     std::cout << "Loading from JSON..." << std::endl;
     try {
         json rules;
@@ -294,7 +299,6 @@ int loadFromJSON() {
             255
         };
         
-        int oldBounds = cellBounds;
         cellBounds = rules["cellBounds"];
         totalCells = cellBounds * cellBounds * cellBounds;
         aliveChanceOnSpawn = rules["aliveChanceOnSpawn"];
@@ -302,7 +306,6 @@ int loadFromJSON() {
         targetFPS = rules["targetFPS"];
 
         std::cout << "Finished loading from JSON..." << std::endl;
-        return oldBounds;
     }
     catch (std::exception& e) {
         std::cout << "Error: " << e.what() << std::endl;
@@ -660,7 +663,9 @@ int main(void) {
         if (uTK.down(IsKeyDown('U'))) tickMode = (TickMode)((tickMode + 1) % 3);
         if (pTK.down(IsKeyDown('P'))) drawBar = !drawBar;
         if (jTK.down(IsKeyDown('J'))) {
-            int oldBounds = loadFromJSON();
+            int oldBounds = cellBounds;
+            int oldState = STATE;
+            loadFromJSON();
             cells2 = createCells();
             int start = (cellBounds - oldBounds) / 2;
             Vector3Int offset = { start, start, start };
@@ -675,6 +680,9 @@ int main(void) {
                 }
             }
             cells = vector<Cell>(cells2);
+            for (size_t i = 0; i < totalCells; i++) {
+                cells[i].jsonStateUpdate(oldState);
+            }
             cameraRadius = 1.75f * cellBounds;
         }
         if (IsKeyDown(KEY_SPACE)) {
