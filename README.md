@@ -65,7 +65,7 @@ At first I wanted to use [wgpu](https://wgpu.rs/) with Rust because there were m
 However, I quickly found that it was overkill for what I needed and I wanted to focus on the simulation rather than writing complex shader code.
 Raylib is very simple to use (and very high level compared to wgpu/OpenGL), just <code>DrawCube(pos, w, l, h, color);</code> and a 3d cube appears.
 Raylib is written purely in C99, but has [bindings](https://github.com/raysan5/raylib/blob/master/BINDINGS.md) to many languages, including Python, Java, and Rust.
-I was tempted to use one of the bindings, but many of the binding were converted to fit the languages paradigms and did not match 1 to 1 with the documentation and examples.
+I was tempted to use one of the bindings, but many of the binding were converted to fit the languages paradigms and did not match 1 to 1 with the documentation.
 The library itself without any bindings is fully compatible with C++, and I really am used to using classes, so I chose C++ over C.
 (Note: there is a [C++ binding](https://github.com/robloach/raylib-cpp) that follows the C++ paradigm rather than the C one, but I chose not to use it for simplicity.)
 
@@ -108,7 +108,7 @@ Cellular automata are used to simulate and study physical phenomena, such as gas
 Cellular automata automata are proposed for use in public key cryptography.
 They can be utilized to construct pseudorandom number generators, and to design error correction codes.
 
-Source:
+Sources:
 - <cite>https://www.techtarget.com/searchenterprisedesktop/definition/cellular-automaton#:~:text=A%20cellular%20automaton%20(CA)%20is,the%20states%20of%20neighboring%20cells.</cite>
 - <cite>https://en.wikipedia.org/wiki/Cellular_automaton#Applications</cite>
 
@@ -174,7 +174,7 @@ The simulation loads the settings from the file when it is started, but they can
 
 ### Changing the rules
 
-The first 4 keys are the rules for the simulation.
+The first 4 options (survival, spawn, state, neighborhood) are the rules for the actually cellular automata.
 The explanations for these rules are [above](#cell-rules-explained) (as well as their types).
 
 ### Changing the colors
@@ -363,7 +363,6 @@ enum TickMode {
 
 #### Fast
 - The simulation progresses one tick forward every frame
-- The speed is often limited by the rendering of the cells, so the simulation tick speed and frame rate will decrease as more cells are rendered
 
 #### Dynamic
 - Tries to progress the simulation as fast as possible while keeping the simulation running above the [target FPS](#targetfps)
@@ -385,13 +384,14 @@ enum TickMode {
 The simulation is optimized for speed, but it still can be slow on higher bounds.
 I have made it as fast as I can, but I am sure there are ways to make it faster.
 
-One of these things is doing all the calculations on the GPU.
+One of these ways could be doing all the calculations on the GPU.
 Right now (from my understanding), the calculations are all done on the CPU, and then streamed to the GPU when they are rendered.
+(Which I think is why 1 CPU thread is always at max usage, it is the one that is in the draw loop and streaming.)
 This is all abstracted away by Raylib, but if the calculations are done on the GPU, then there will be no need to stream the data to the GPU.
 (Also it seems like most GPUs are faster and can handle parallel calculations much faster/better than CPUs.)
 
 Here are some of the things I have done to improve the speed of the simulation:
-Note: a lot of this code is modified to illustrate the point, and may not match 1 to 1 with the actual code
+Note: a lot of this code is modified to illustrate the point, and may not match 1 to 1 with the actual code.
 
 ### Indexing over iteration
 
@@ -428,6 +428,7 @@ However, before, I had a vector of vectors of vectors of cells:
 vector<vector<vector<Cell>>> cells;
 ```
 After some googling, I found that accessing vectors of vectors (of vectors) is slow, because of the "indirection and lack of locality [which] quickly kills a lot of performance."
+(All the memory was not nessisarily in the same place, so it had to do a lot of extra work.)
 To solve this problem, I made the cells a 1 dimensional vector, and indexed with:
 ```
 size_t threeToOne(int x, int y, int z) {
@@ -435,7 +436,8 @@ size_t threeToOne(int x, int y, int z) {
 }
 ```
 It seemed to run faster when doing this extra calculation per cell than using a vector of vectors of vectors of cells.
-(Not sure if was actually worth.) The main downside is that code/math when reloading from the JSON and changing the bounds is a bit more complicated as every cell has to shuffle around.
+(Not sure if was actually worth.)
+The main downside is that code/math when reloading from the JSON and changing the bounds is a bit more complicated as every cell has to shuffle around.
 
 
 ### Branching at the highest level
@@ -485,8 +487,9 @@ switch (drawMode) {
 
 ### Branchless programming
 
-I am not actually sure if this is faster. The only thing I really read was [this](https://dev.to/jobinrjohnson/branchless-programming-does-it-really-matter-20j4).
-The idea is that having branches (if/switch/conditional assignment/etc) is slower than just doing math.
+I am not actually sure if this is faster.
+The only thing I really read was [this](https://dev.to/jobinrjohnson/branchless-programming-does-it-really-matter-20j4).
+The idea is that having branches (if/switch/conditional assignment/etc) is slower than just doing math and using boolean to int conversions.
 I am sure at what point this is true, but it seemed to speed up the simulation, so I just left it in.
 
 For example, I replaced (example from earlier): 
@@ -513,8 +516,8 @@ else if (state == DYING) {
 With:
 ```
 hp = 
-    (hp == STATE) * (hp - 1 + SURVIVAL[neighbors]) + // alive
-    (hp < 0) * (SPAWN[neighbors] * (STATE + 1) - 1) +  // dead
+    (hp == STATE) * (hp - 1 + survival[neighbors]) + // alive
+    (hp < 0) * (spawn[neighbors] * (STATE + 1) - 1) +  // dead
     (hp >= 0 && hp < STATE) * (hp - 1); // dying
 ```
 This works by eliminating the need for the 'state' variable as it was directly related to its hp where:
@@ -624,16 +627,15 @@ As mentioned earlier, this could likely still be done better/faster, but it seem
 ## Compiling
 
 So I don't really understand how multi-file projects work for C++/C, but the C99 version of Raylib came with a Notepad++ script to compile it.
-I modified it slightly to work with my C++ compiler and to include the library needed to read the JSON file.
+I modified it slightly to work with the C++ compiler:
 ```
 SET RAYLIB_PATH=C:\raylib\raylib
-SET CC=g++
 SET CFLAGS=$(RAYLIB_PATH)\src\raylib.rc.data -s -static -Os -Wall -I$(RAYLIB_PATH)\src -Iexternal -DPLATFORM_DESKTOP -std=c++11 -pthread
 SET LDFLAGS=-lraylib -lopengl32 -lgdi32 -lwinmm
 cd $(CURRENT_DIRECTORY)
 cmd /c IF EXIST $(NAME_PART).exe del /F $(NAME_PART).exe
 npp_save
-$(CC) -o $(NAME_PART).exe $(FILE_NAME) $(CFLAGS) $(LDFLAGS)
+g++ -o $(NAME_PART).exe $(FILE_NAME) $(CFLAGS) $(LDFLAGS)
 ENV_UNSET PATH
 cmd /c IF EXIST $(NAME_PART).exe $(NAME_PART).exe
 ```
