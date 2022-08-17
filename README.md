@@ -63,9 +63,9 @@ Information about compiling for non-Windows can be found [here](compiling).
 For graphics, the [Raylib](https://www.raylib.com/) library is used.
 At first I wanted to use [wgpu](https://wgpu.rs/) with Rust because there were many tutorials online.
 However, I quickly found that it was overkill for what I needed and I wanted to focus on the simulation rather than writing complex shader code.
-Raylib is very simple to use (and very high level compared to wgpu/OpenGL), just <code>DrawCube(pos, w, l, h, color);</code> and a 3d cube appears.
+Raylib is very simple to use, just <code>DrawCube(pos, w, l, h, color);</code> and a 3d cube appears.
 Raylib is written purely in C99, but has [bindings](https://github.com/raysan5/raylib/blob/master/BINDINGS.md) to many languages, including Python, Java, and Rust.
-I was tempted to use one of the bindings, but many of the binding were converted to fit the languages paradigms and did not match 1 to 1 with the documentation.
+I was tempted to use one of the bindings, but many of the binding were converted to fit the languages paradigms and did not match 1 to 1 with the documentation or examples.
 The library itself without any bindings is fully compatible with C++, and I really am used to using classes, so I chose C++ over C.
 (Note: there is a [C++ binding](https://github.com/robloach/raylib-cpp) that follows the C++ paradigm rather than the C one, but I chose not to use it for simplicity.)
 
@@ -145,7 +145,7 @@ A cell can be in one of 3 states: alive, dying, or dead.
     - 3^3 - 1 = 26 possible neighbors
 - "VN" - Von Neumann:
     - Neighbors are only cells where the faces touch
-    -6 possible neighbors
+    - 6 possible neighbors
 
 ### Some examples
 (Note: can just copy/replace in options.json)

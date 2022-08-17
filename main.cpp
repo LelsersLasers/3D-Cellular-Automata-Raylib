@@ -344,9 +344,7 @@ void updateNeighbors(vector<Cell> &cells, int start, int end, const Vector3Int o
                 cells[oneIdx].clearNeighbors();
                 for (size_t i = 0; i < totalOffsets; i++) {
                     if (validCellIndex(x, y, z, offsets[i])) {
-                        cells[oneIdx]
-                            .addNeighbor(cells[threeToOne(x + offsets[i].x, y + offsets[i].y, z + offsets[i].z)]
-                                .getAlive());
+                        cells[oneIdx].addNeighbor(cells[threeToOne(x + offsets[i].x, y + offsets[i].y, z + offsets[i].z)].getAlive());
                     }
                 }
             }
@@ -359,7 +357,7 @@ void updateCells(vector<Cell> &cells) {
     size_t totalOffsets;
     Cell::clearCellCounts();
     if (NEIGHBORHOODS == MOORE) {
-        // idk how to set array to a different array
+        // I don't know how to set array to a different array
         offsets[0] = { -1, -1, -1 };
         offsets[1] = { -1, -1, 0 };
         offsets[2] = { -1, -1, 1 };
@@ -421,8 +419,8 @@ void updateCells(vector<Cell> &cells) {
 
 
 void drawCells(const vector<Cell> &cells, int divisor, DrawMode drawMode) {
-    // A bit exessive to put this outside, but is saves doing cellBounds^3 extra checks
-    // at the cost of extra code
+    // A bit exessive to put this on the outside, but is saves doing cellBounds^3
+    // extra checks at the cost of extra code
     switch (drawMode) {
         case DUAL_COLOR:
             for (int x = 0; x < cellBounds/divisor; x++) {
@@ -472,7 +470,20 @@ void drawCells(const vector<Cell> &cells, int divisor, DrawMode drawMode) {
     }
 }
 
-void drawLeftBar(bool drawBounds, bool showHalf, bool paused, DrawMode drawMode, TickMode tickMode, int updateSpeed, int ticks, float growthRate, float deathRate, float cameraLat, float cameraLon) {
+void drawLeftBar(
+    bool drawBounds,
+    bool showHalf,
+    bool paused,
+    DrawMode drawMode,
+    TickMode tickMode,
+    int updateSpeed,
+    int ticks,
+    float growthRate,
+    float deathRate,
+    float cameraLat,
+    float cameraLon
+) {
+    // I know there are a lot of parameters, but this vastly cleans the draw() function
     char dirs[2] = {
         (cameraLat > 0 ? 'N' : 'S'),
         (cameraLon > 0 ? 'W' : 'E')
@@ -534,7 +545,23 @@ void drawLeftBar(bool drawBounds, bool showHalf, bool paused, DrawMode drawMode,
     }
 }
 
-void draw(Camera3D camera, const vector<Cell> &cells, bool drawBounds, bool drawBar, bool showHalf, bool paused, DrawMode drawMode, TickMode tickMode, int updateSpeed, int ticks, float growthRate, float deathRate, float cameraLat, float cameraLon) {
+void draw(
+    Camera3D camera,
+    const vector<Cell> &cells,
+    bool drawBounds,
+    bool drawBar,
+    bool showHalf,
+    bool paused,
+    DrawMode drawMode,
+    TickMode tickMode,
+    int updateSpeed, 
+    int ticks,
+    float growthRate,
+    float deathRate,
+    float cameraLat,
+    float cameraLon)
+ {
+    // I know there are a lot of parameters, but this vastly cleans the main() function
     BeginDrawing();
         ClearBackground(RAYWHITE);
         BeginMode3D(camera);
@@ -556,6 +583,7 @@ void randomizeCells(vector<Cell> &cells) {
     for (size_t i = 0; i < totalCells; i++) {
         cells[i].reset();
     }
+    // Only middle section has a spawn chance
     for (int x = cellBounds/3.0f; x < cellBounds * 2.0f/3.0f; x++) {
         for (int y = cellBounds/3.0f; y < cellBounds * 2.0f/3.0f; y++) {
             for (int z = cellBounds/3.0f; z < cellBounds * 2.0f/3.0f; z++) {
@@ -724,13 +752,13 @@ int main(void) {
             }
             while (tickMode != FAST && frame >= 1.0/updateSpeed) frame -= 1.0/updateSpeed;
 
-            cells2 = vector<Cell>(cells);
+            cells2 = vector<Cell>(cells); // create copy to be updated in background
             thread updateThread(updateCells, std::ref(cells2));
 
             draw(camera, cells, drawBounds, drawBar, showHalf, paused, drawMode, tickMode, updateSpeed, ticks, growthRate, deathRate, cameraLat, cameraLon);
 
             updateThread.join();
-            cells = vector<Cell>(cells2);
+            cells = vector<Cell>(cells2); // copy the updated cells to the main cells
             
             ticks++;
             growthRate = Cell::getAliveCells() / (float)lastAliveCells;
