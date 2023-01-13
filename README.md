@@ -626,6 +626,8 @@ As mentioned earlier, this could likely still be done better/faster, but it seem
 
 ## Compiling
 
+### Windows
+
 So I don't really understand how multi-file projects work for C++/C, but the C99 version of Raylib came with a Notepad++ script to compile it.
 I modified it slightly to work with the C++ compiler:
 ```
@@ -641,3 +643,29 @@ cmd /c IF EXIST $(NAME_PART).exe $(NAME_PART).exe
 ```
 I don't fully understand all of it, but it seems to work.
 The instructions for installing/downloading Raylib were pretty simple and can be navigated to from their [website](https://www.raylib.com/).
+
+### Linux
+
+Instructions: https://github.com/raysan5/raylib/wiki/Working-on-GNU-Linux
+
+#### Quick start (Fedora)
+
+Install dependencies:
+```
+sudo dnf install alsa-lib-devel mesa-libGL-devel libX11-devel libXrandr-devel libXi-devel libXcursor-devel libXinerama-devel libatomic wayland-devel libxkbcommon-devel wayland-protocols-devel
+```
+
+Install/setup raylib (with Wayland support):
+```
+git clone https://github.com/raysan5/raylib.git raylib
+cd raylib
+mkdir build && cd build
+cmake -DUSE_WAYLAND=ON ..
+make
+sudo make install
+```
+
+Compile:
+```
+g++ -o main main.cpp -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
+```
