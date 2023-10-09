@@ -61,7 +61,8 @@ Information about compiling for non-Windows can be found [here](compiling).
 
 ### Raylib
 For graphics, the [Raylib](https://www.raylib.com/) library is used.
-At first I wanted to use [wgpu](https://wgpu.rs/) with Rust because there were many tutorials online.
+At first I wanted to use [wgpu](https://wgpu.rs/) with Rust because there were many tutorials online. (UPDATE: [I did it!](https://lelserslasers.itch.io/3d-cellular-automata-wgpu-rust)
+Running live on the web: https://lelserslasers.itch.io/3d-cellular-automata-wgpu-rust)
 However, I quickly found that it was overkill for what I needed and I wanted to focus on the simulation rather than writing complex shader code.
 Raylib is very simple to use, just <code>DrawCube(pos, w, l, h, color);</code> and a 3d cube appears.
 Raylib is written purely in C99, but has [bindings](https://github.com/raysan5/raylib/blob/master/BINDINGS.md) to many languages, including Python, Java, and Rust.
